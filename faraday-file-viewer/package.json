@@ -1,0 +1,31 @@
+{
+  "name": "faraday-file-viewer",
+  "version": "1.0.0",
+  "publisher": "faraday",
+  "displayName": "File Viewer",
+  "description": "View file contents (text/binary) in Faraday",
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite build --watch"
+  },
+  "contributes": {
+    "viewers": [
+      {
+        "id": "file-viewer",
+        "label": "File Viewer",
+        "patterns": ["*", "*.*"],
+        "entry": "dist/viewer.iife.js",
+        "priority": 0
+      }
+    ]
+  },
+  "dependencies": {
+    "comlink": "^4.4.2"
+  },
+  "devDependencies": {
+    "esbuild": "^0.27.0",
+    "typescript": "~5.9.3",
+    "vite": "^8.0.0"
+  }
+}

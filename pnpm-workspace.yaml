@@ -1,0 +1,4 @@
+packages:
+  - "faraday-monaco-editor"
+  - "faraday-image-viewer"
+  - "faraday-file-viewer"

@@ -1,0 +1,13 @@
+{
+  "name": "faraday-extensions",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "pnpm -r run build",
+    "build:monaco": "pnpm --filter faraday-monaco-editor run build",
+    "build:image-viewer": "pnpm --filter faraday-image-viewer run build",
+    "build:file-viewer": "pnpm --filter faraday-file-viewer run build",
+    "dev": "pnpm -r run dev"
+  }
+}

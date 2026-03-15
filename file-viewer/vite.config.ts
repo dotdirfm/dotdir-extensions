@@ -10,10 +10,7 @@ export default defineConfig({
       fileName: 'viewer',
       formats: ['iife'],
     },
-    rollupOptions: {
-      output: { inlineDynamicImports: true },
-    },
     minify: 'esbuild',
-    sourcemap: true,
+    sourcemap: false,
   },
 });

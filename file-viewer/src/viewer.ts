@@ -101,45 +101,27 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
 }
 
-export async function mountViewer(hostApi: HostApi, props: ViewerProps): Promise<void> {
+export async function mountViewer(root: HTMLElement, hostApi: HostApi, props: ViewerProps): Promise<void> {
   fileSize = props.fileSize;
   filePos = 0;
   screenLines = [];
   avgBytesPerLine = 80;
 
-  document.body.innerHTML = '';
-  document.body.style.margin = '0';
-  document.body.style.padding = '0';
-  document.body.style.height = '100%';
-  document.body.style.display = 'flex';
-  document.body.style.flexDirection = 'column';
-  document.body.style.overflow = 'hidden';
-  document.body.style.fontFamily = 'monospace';
-  document.body.style.fontSize = '13px';
-
-  const header = document.createElement('div');
-  header.style.cssText = 'display:flex;align-items:center;padding:6px 10px;border-bottom:1px solid #333;flex-shrink:0;';
-  const title = document.createElement('span');
-  title.textContent = props.fileName;
-  title.style.flex = '1';
-  header.appendChild(title);
-  const sizeSpan = document.createElement('span');
-  sizeSpan.style.marginLeft = '12px';
-  sizeSpan.textContent = formatBytes(fileSize);
-  header.appendChild(sizeSpan);
-  const closeBtn = document.createElement('button');
-  closeBtn.textContent = '×';
-  closeBtn.title = 'Close (Esc)';
-  closeBtn.style.cssText = 'background:transparent;border:none;cursor:pointer;font-size:18px;padding:0 8px;margin-left:8px;';
-  closeBtn.onclick = () => hostApi.onClose();
-  header.appendChild(closeBtn);
-  document.body.appendChild(header);
+  root.innerHTML = '';
+  root.style.margin = '0';
+  root.style.padding = '0';
+  root.style.height = '100%';
+  root.style.display = 'flex';
+  root.style.flexDirection = 'column';
+  root.style.overflow = 'hidden';
+  root.style.fontFamily = 'monospace';
+  root.style.fontSize = '13px';
 
   const textDiv = document.createElement('div');
   textDiv.style.cssText = 'flex:1;min-height:0;overflow:auto;padding:8px;white-space:pre;';
   textDiv.tabIndex = 0;
   rootEl = textDiv;
-  document.body.appendChild(textDiv);
+  root.appendChild(textDiv);
 
   const renderLines = (lines: ScreenLine[]) => {
     textDiv.innerHTML = '';
@@ -244,6 +226,8 @@ export function unmountViewer(): void {
     window.removeEventListener('resize', resizeHandler);
     resizeHandler = null;
   }
-  if (rootEl?.parentNode) rootEl.parentNode.removeChild(rootEl);
+  if (rootEl?.parentNode) {
+    rootEl.parentNode.removeChild(rootEl);
+  }
   rootEl = null;
 }

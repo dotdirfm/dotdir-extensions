@@ -8,11 +8,7 @@ importers:
 
   .: {}
 
-  faraday-file-viewer:
-    dependencies:
-      comlink:
-        specifier: ^4.4.2
-        version: 4.4.2
+  file-viewer:
     devDependencies:
       esbuild:
         specifier: ^0.27.0
@@ -24,11 +20,7 @@ importers:
         specifier: ^8.0.0
         version: 8.0.0(esbuild@0.27.4)
 
-  faraday-image-viewer:
-    dependencies:
-      comlink:
-        specifier: ^4.4.2
-        version: 4.4.2
+  image-viewer:
     devDependencies:
       esbuild:
         specifier: ^0.27.0
@@ -40,7 +32,7 @@ importers:
         specifier: ^8.0.0
         version: 8.0.0(esbuild@0.27.4)
 
-  faraday-monaco-editor:
+  monaco-editor:
     dependencies:
       comlink:
         specifier: ^4.4.2

@@ -15,11 +15,6 @@ export default defineConfig({
       fileName: 'editor',
       formats: ['iife'],
     },
-    rollupOptions: {
-      output: {
-        inlineDynamicImports: true,
-      },
-    },
     minify: 'esbuild',
     sourcemap: false,
   },

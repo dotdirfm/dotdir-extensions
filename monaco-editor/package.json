@@ -1,10 +1,11 @@
 {
-  "name": "faraday-monaco-editor",
+  "name": "monaco-editor",
   "version": "1.0.0",
-  "publisher": "faraday-fm",
+  "publisher": "faraday",
   "displayName": "Monaco Editor",
   "description": "Monaco-based code editor for Faraday with syntax highlighting",
   "type": "module",
+  "files": ["dist"],
   "scripts": {
     "build": "vite build",
     "dev": "vite build --watch"
@@ -35,7 +36,9 @@
   },
   "dependencies": {
     "comlink": "^4.4.2",
-    "monaco-editor": "^0.55.1"
+    "monaco-editor": "^0.55.1",
+    "vscode-oniguruma": "^2.0.1",
+    "vscode-textmate": "^9.3.2"
   },
   "devDependencies": {
     "esbuild": "^0.27.0",

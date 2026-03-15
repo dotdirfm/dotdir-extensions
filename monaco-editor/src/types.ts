@@ -34,9 +34,10 @@ export interface HostApi {
 }
 
 export interface EditorExtensionApi {
-  mount(props: EditorProps): Promise<void>;
+  mount(root: HTMLElement, hostApi: HostApi, props: EditorProps): Promise<void>;
   unmount(): Promise<void>;
   setDirty?(dirty: boolean): void;
+  setLanguage?(langId: string): void | Promise<void>;
 }
 
 export interface ExtensionGrammar {

@@ -18,7 +18,7 @@ let rootEl: HTMLElement | null = null;
 let keydownHandler: ((e: KeyboardEvent) => void) | null = null;
 let focusinHandler: ((e: FocusEvent) => void) | null = null;
 
-export async function mountViewer(hostApi: HostApi, props: ViewerProps): Promise<void> {
+export async function mountViewer(root: HTMLElement, hostApi: HostApi, props: ViewerProps): Promise<void> {
   if (objectUrl) URL.revokeObjectURL(objectUrl);
   objectUrl = null;
   if (keydownHandler) {
@@ -35,41 +35,23 @@ export async function mountViewer(hostApi: HostApi, props: ViewerProps): Promise
   const isVideo = /^(mp4|webm|ogv|ogg|mov|m4v)$/.test(ext);
   const inline = !!props.inline;
 
-  document.documentElement.style.width = '100%';
-  document.documentElement.style.height = '100%';
-  document.documentElement.style.margin = '0';
-  document.documentElement.style.padding = '0';
-  document.body.innerHTML = '';
-  document.body.style.margin = '0';
-  document.body.style.padding = '0';
-  document.body.style.width = '100%';
-  document.body.style.height = '100%';
-  document.body.style.display = 'flex';
-  document.body.style.flexDirection = 'column';
-  document.body.style.overflow = 'hidden';
+  root.innerHTML = '';
+  root.style.margin = '0';
+  root.style.padding = '0';
+  root.style.width = '100%';
+  root.style.height = '100%';
+  root.style.display = 'flex';
+  root.style.flexDirection = 'column';
+  root.style.overflow = 'hidden';
   if (inline) {
-    document.body.tabIndex = -1;
+    root.tabIndex = -1;
   }
-
-  const header = document.createElement('div');
-  header.style.cssText = 'display:flex;align-items:center;padding:6px 10px;border-bottom:1px solid #333;flex-shrink:0;';
-  const title = document.createElement('span');
-  title.textContent = props.fileName;
-  title.style.flex = '1';
-  header.appendChild(title);
-  const closeBtn = document.createElement('button');
-  closeBtn.textContent = '×';
-  closeBtn.title = 'Close (Esc)';
-  closeBtn.style.cssText = 'background:transparent;border:none;cursor:pointer;font-size:18px;padding:0 8px;';
-  closeBtn.onclick = () => hostApi.onClose();
-  header.appendChild(closeBtn);
-  document.body.appendChild(header);
 
   const wrap = document.createElement('div');
   wrap.style.cssText = 'flex:1;min-height:0;min-width:0;width:100%;display:flex;align-items:center;justify-content:center;overflow:auto;background:#1a1a1a;';
   if (inline) wrap.tabIndex = -1;
   rootEl = wrap;
-  document.body.appendChild(wrap);
+  root.appendChild(wrap);
 
   const buf = await hostApi.readFile(props.filePath);
   const blob = new Blob([buf], { type: mime });
@@ -132,6 +114,8 @@ export function unmountViewer(): void {
     URL.revokeObjectURL(objectUrl);
     objectUrl = null;
   }
-  if (rootEl?.parentNode) rootEl.parentNode.removeChild(rootEl);
+  if (rootEl?.parentNode) {
+    rootEl.parentNode.removeChild(rootEl);
+  }
   rootEl = null;
 }

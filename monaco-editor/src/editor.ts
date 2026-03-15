@@ -149,7 +149,7 @@ function ensureMonacoReady(): void {
   monacoReady = true;
 }
 
-export async function createEditorMount(hostApi: HostApi, props: EditorProps): Promise<() => void> {
+export async function createEditorMount(root: HTMLElement, hostApi: HostApi, props: EditorProps): Promise<() => void> {
   ensureMonacoReady();
   await activateGrammars(hostApi, props);
   const theme = await hostApi.getTheme();
@@ -158,38 +158,19 @@ export async function createEditorMount(hostApi: HostApi, props: EditorProps): P
 
   const content = await hostApi.readFileText(props.filePath);
 
-  // Build DOM: header + editor area. Fill iframe and avoid overflow/clipping.
-  const doc = document;
-  doc.documentElement.style.height = '100%';
-  doc.documentElement.style.overflow = 'hidden';
-  doc.body.innerHTML = '';
-  doc.body.style.margin = '0';
-  doc.body.style.padding = '0';
-  doc.body.style.height = '100%';
-  doc.body.style.overflow = 'hidden';
-  doc.body.style.display = 'flex';
-  doc.body.style.flexDirection = 'column';
-  doc.body.className = isDark ? 'faraday-dark' : 'faraday-light';
-
-  const header = document.createElement('div');
-  header.style.cssText =
-    'display:flex;align-items:center;padding:6px 10px;border-bottom:1px solid var(--border, #333);flex-shrink:0;';
-  const title = document.createElement('span');
-  title.textContent = props.fileName;
-  title.style.flex = '1';
-  header.appendChild(title);
-  const closeBtn = document.createElement('button');
-  closeBtn.textContent = '×';
-  closeBtn.title = 'Close (Esc)';
-  closeBtn.style.cssText = 'background:transparent;border:none;cursor:pointer;font-size:18px;padding:0 8px;';
-  closeBtn.onclick = () => hostApi.onClose();
-  header.appendChild(closeBtn);
+  root.innerHTML = '';
+  root.style.margin = '0';
+  root.style.padding = '0';
+  root.style.height = '100%';
+  root.style.overflow = 'hidden';
+  root.style.display = 'flex';
+  root.style.flexDirection = 'column';
+  root.className = isDark ? 'faraday-dark' : 'faraday-light';
 
   const editorHost = document.createElement('div');
   editorHost.style.cssText = 'flex:1;min-height:0;width:100%;overflow:hidden;';
 
-  document.body.appendChild(header);
-  document.body.appendChild(editorHost);
+  root.appendChild(editorHost);
   rootEl = editorHost;
 
   const editor = monaco.editor.create(editorHost, {
@@ -258,6 +239,15 @@ export async function createEditorMount(hostApi: HostApi, props: EditorProps): P
     if (rootEl?.parentNode) rootEl.parentNode.removeChild(rootEl);
     rootEl = null;
   };
+}
+
+export function setEditorLanguage(langId: string): void {
+  if (editorInstance) {
+    const model = editorInstance.getModel();
+    if (model) {
+      monaco.editor.setModelLanguage(model, langId);
+    }
+  }
 }
 
 export function disposeEditor(): void {

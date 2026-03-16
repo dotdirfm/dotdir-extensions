@@ -1,11 +1,13 @@
 {
   "name": "pdf-viewer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "faraday",
   "displayName": "PDF Viewer",
   "description": "View PDF files in Faraday",
   "type": "module",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "vite build",
     "dev": "vite build --watch"
@@ -15,7 +17,9 @@
       {
         "id": "pdf-viewer",
         "label": "PDF Viewer",
-        "patterns": ["*.pdf"],
+        "patterns": [
+          "*.pdf"
+        ],
         "entry": "dist/viewer.iife.js",
         "priority": 10
       }

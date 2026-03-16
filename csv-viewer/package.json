@@ -1,11 +1,13 @@
 {
   "name": "csv-viewer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "faraday",
   "displayName": "CSV Viewer",
   "description": "View CSV files in Faraday",
   "type": "module",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "vite build",
     "dev": "vite build --watch"
@@ -15,7 +17,9 @@
       {
         "id": "csv-viewer",
         "label": "CSV Viewer",
-        "patterns": ["*.csv"],
+        "patterns": [
+          "*.csv"
+        ],
         "entry": "dist/viewer.iife.js",
         "priority": 10
       }

@@ -1,11 +1,13 @@
 {
   "name": "monaco-editor",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "faraday",
   "displayName": "Monaco Editor",
   "description": "Monaco-based code editor for Faraday with syntax highlighting",
   "type": "module",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "vite build",
     "dev": "vite build --watch"
@@ -15,22 +17,114 @@
       {
         "id": "monaco",
         "label": "Monaco Editor",
-        "patterns": ["*.*"],
+        "patterns": [
+          "*.*"
+        ],
         "entry": "dist/editor.iife.js",
         "priority": 0
       }
     ],
     "languages": [
-      { "id": "plaintext", "aliases": ["Plain Text"], "extensions": [".txt"] },
-      { "id": "json", "aliases": ["JSON"], "extensions": [".json", ".jsonc"] },
-      { "id": "typescript", "aliases": ["TypeScript"], "extensions": [".ts", ".mts", ".cts"] },
-      { "id": "javascript", "aliases": ["JavaScript"], "extensions": [".js", ".mjs", ".cjs"] },
-      { "id": "markdown", "aliases": ["Markdown"], "extensions": [".md", ".mdx"] },
-      { "id": "html", "aliases": ["HTML"], "extensions": [".html", ".htm"] },
-      { "id": "css", "aliases": ["CSS"], "extensions": [".css"] },
-      { "id": "yaml", "aliases": ["YAML"], "extensions": [".yml", ".yaml"] },
-      { "id": "xml", "aliases": ["XML"], "extensions": [".xml"] },
-      { "id": "shellscript", "aliases": ["Shell Script"], "extensions": [".sh", ".bash", ".zsh"] }
+      {
+        "id": "plaintext",
+        "aliases": [
+          "Plain Text"
+        ],
+        "extensions": [
+          ".txt"
+        ]
+      },
+      {
+        "id": "json",
+        "aliases": [
+          "JSON"
+        ],
+        "extensions": [
+          ".json",
+          ".jsonc"
+        ]
+      },
+      {
+        "id": "typescript",
+        "aliases": [
+          "TypeScript"
+        ],
+        "extensions": [
+          ".ts",
+          ".mts",
+          ".cts"
+        ]
+      },
+      {
+        "id": "javascript",
+        "aliases": [
+          "JavaScript"
+        ],
+        "extensions": [
+          ".js",
+          ".mjs",
+          ".cjs"
+        ]
+      },
+      {
+        "id": "markdown",
+        "aliases": [
+          "Markdown"
+        ],
+        "extensions": [
+          ".md",
+          ".mdx"
+        ]
+      },
+      {
+        "id": "html",
+        "aliases": [
+          "HTML"
+        ],
+        "extensions": [
+          ".html",
+          ".htm"
+        ]
+      },
+      {
+        "id": "css",
+        "aliases": [
+          "CSS"
+        ],
+        "extensions": [
+          ".css"
+        ]
+      },
+      {
+        "id": "yaml",
+        "aliases": [
+          "YAML"
+        ],
+        "extensions": [
+          ".yml",
+          ".yaml"
+        ]
+      },
+      {
+        "id": "xml",
+        "aliases": [
+          "XML"
+        ],
+        "extensions": [
+          ".xml"
+        ]
+      },
+      {
+        "id": "shellscript",
+        "aliases": [
+          "Shell Script"
+        ],
+        "extensions": [
+          ".sh",
+          ".bash",
+          ".zsh"
+        ]
+      }
     ],
     "grammars": []
   },

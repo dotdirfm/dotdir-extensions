@@ -9,7 +9,8 @@
     "build:image-viewer": "pnpm --filter image-viewer run build",
     "build:file-viewer": "pnpm --filter file-viewer run build",
     "dev": "pnpm -r run dev",
-    "pack": "node scripts/pack.mjs"
+    "pack": "node scripts/pack.mjs",
+    "ver:patch": "pnpm -r exec pnpm version patch"
   },
   "devDependencies": {
     "archiver": "^7.0.1"

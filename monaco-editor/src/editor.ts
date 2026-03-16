@@ -150,20 +150,19 @@ function ensureMonacoReady(): void {
 }
 
 /**
- * Normalize a CSS color value to 6-digit hex (without '#') for Monaco token rules.
- * Handles: #RGB, #RRGGBB, #RRGGBBAA, named colors (white, red, etc.).
+ * Normalize a CSS color to #RRGGBB or #RRGGBBAA for Monaco's colors map.
+ * Handles: #RGB, #RGBA, #RRGGBB, #RRGGBBAA, named colors.
  * Returns null if the value cannot be normalized.
  */
-function normalizeTokenColor(value: string): string | null {
+function normalizeColor(value: string): string | null {
   if (!value) return null;
   const v = value.trim();
 
   if (v.startsWith('#')) {
     const hex = v.slice(1);
-    if (hex.length === 6) return hex;
-    if (hex.length === 8) return hex.slice(0, 6); // strip alpha
-    if (hex.length === 3) return hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
-    if (hex.length === 4) return hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2]; // strip alpha
+    if (hex.length === 6 || hex.length === 8) return v; // already valid
+    if (hex.length === 3) return '#' + hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+    if (hex.length === 4) return '#' + hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2] + hex[3] + hex[3];
     return null;
   }
 
@@ -172,12 +171,24 @@ function normalizeTokenColor(value: string): string | null {
     const ctx = document.createElement('canvas').getContext('2d');
     if (!ctx) return null;
     ctx.fillStyle = v;
-    const resolved = ctx.fillStyle; // returns '#rrggbb' or 'rgba(...)'
-    if (resolved.startsWith('#')) return resolved.slice(1);
+    const resolved = ctx.fillStyle; // returns '#rrggbb'
+    if (resolved.startsWith('#')) return resolved;
     return null;
   } catch {
     return null;
   }
+}
+
+/**
+ * Normalize a CSS color to 6-digit hex WITHOUT '#' prefix for Monaco token rules.
+ */
+function normalizeTokenColor(value: string): string | null {
+  const c = normalizeColor(value);
+  if (!c) return null;
+  const hex = c.slice(1); // strip '#'
+  // Token rules only accept 6-digit hex, strip alpha if present
+  if (hex.length === 8) return hex.slice(0, 6);
+  return hex;
 }
 
 /** Convert VS Code tokenColors to Monaco ITokenThemeRule[], and return editor colors. */
@@ -190,7 +201,8 @@ function buildMonacoTheme(
 
   if (themeData.colors) {
     for (const [key, value] of Object.entries(themeData.colors)) {
-      colors[key] = value;
+      const normalized = normalizeColor(value);
+      if (normalized) colors[key] = normalized;
     }
   }
 

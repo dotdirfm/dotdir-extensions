@@ -2,3 +2,5 @@ packages:
   - "monaco-editor"
   - "image-viewer"
   - "file-viewer"
+  - "csv-viewer"
+  - "pdf-viewer"

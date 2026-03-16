@@ -5,9 +5,13 @@
   "type": "module",
   "scripts": {
     "build": "pnpm -r run build",
-    "build:monaco": "pnpm --filter faraday-monaco-editor run build",
-    "build:image-viewer": "pnpm --filter faraday-image-viewer run build",
-    "build:file-viewer": "pnpm --filter faraday-file-viewer run build",
-    "dev": "pnpm -r run dev"
+    "build:monaco": "pnpm --filter monaco-editor run build",
+    "build:image-viewer": "pnpm --filter image-viewer run build",
+    "build:file-viewer": "pnpm --filter file-viewer run build",
+    "dev": "pnpm -r run dev",
+    "pack": "node scripts/pack.mjs"
+  },
+  "devDependencies": {
+    "archiver": "^7.0.1"
   }
 }

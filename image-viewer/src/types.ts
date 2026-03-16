@@ -1,15 +1,8 @@
-export interface MediaFileRef {
-  path: string;
-  name: string;
-  size: number;
-}
-
 export interface ViewerProps {
   filePath: string;
   fileName: string;
   fileSize: number;
   inline?: boolean;
-  mediaFiles?: MediaFileRef[];
 }
 
 export interface HostApi {
@@ -18,7 +11,7 @@ export interface HostApi {
   readFileRange?(path: string, offset: number, length: number): Promise<ArrayBuffer>;
   getTheme(): Promise<string>;
   onClose(): void;
-  onNavigateMedia?(file: MediaFileRef): void;
+  executeCommand?<T = unknown>(command: string, args?: unknown): Promise<T>;
 }
 
 export interface ViewerExtensionApi {

@@ -1,6 +1,7 @@
 import type { ViewerProps, HostApi } from './types';
 import { isStreamable, streamVideo } from './video-stream';
 import { attachControls, type ControlsHandle } from './video-controls';
+import { createNavOverlay, type NavOverlayHandle } from './nav-overlay';
 
 const MIME: Record<string, string> = {
   png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif',
@@ -18,6 +19,7 @@ function getExt(name: string): string {
 let objectUrl: string | null = null;
 let streamDestroy: (() => void) | null = null;
 let controlsHandle: ControlsHandle | null = null;
+let navHandle: NavOverlayHandle | null = null;
 let rootEl: HTMLElement | null = null;
 let keydownHandler: ((e: KeyboardEvent) => void) | null = null;
 let focusinHandler: ((e: FocusEvent) => void) | null = null;
@@ -25,6 +27,7 @@ let focusinHandler: ((e: FocusEvent) => void) | null = null;
 function cleanup() {
   if (keydownHandler) { document.removeEventListener('keydown', keydownHandler); keydownHandler = null; }
   if (focusinHandler) { document.removeEventListener('focusin', focusinHandler); focusinHandler = null; }
+  if (navHandle) { navHandle.destroy(); navHandle = null; }
   if (controlsHandle) { controlsHandle.destroy(); controlsHandle = null; }
   if (streamDestroy) { streamDestroy(); streamDestroy = null; }
   if (objectUrl) { URL.revokeObjectURL(objectUrl); objectUrl = null; }
@@ -93,7 +96,7 @@ export async function mountViewer(root: HTMLElement, hostApi: HostApi, props: Vi
       controlsHandle.setStreaming(false);
     }
   } else {
-    wrap.style.cssText = 'flex:1;min-height:0;min-width:0;width:100%;display:flex;align-items:center;justify-content:center;overflow:auto;background:#1a1a1a;';
+    wrap.style.cssText = 'flex:1;min-height:0;min-width:0;width:100%;display:flex;align-items:center;justify-content:center;overflow:auto;background:#1a1a1a;position:relative;';
 
     const buf = await hostApi.readFile(props.filePath);
     const blob = new Blob([buf], { type: mime });
@@ -107,9 +110,8 @@ export async function mountViewer(root: HTMLElement, hostApi: HostApi, props: Vi
     wrap.appendChild(img);
   }
 
-  const mediaFiles = props.mediaFiles ?? [];
-  const idx = mediaFiles.findIndex((f) => f.path === props.filePath);
-  const onNav = hostApi.onNavigateMedia;
+  // Navigation overlay (arrows + counter)
+  navHandle = createNavOverlay(wrap, hostApi);
 
   keydownHandler = (e: KeyboardEvent) => {
     if (e.key === 'Escape') hostApi.onClose();
@@ -118,9 +120,6 @@ export async function mountViewer(root: HTMLElement, hostApi: HostApi, props: Vi
       const v = wrap.querySelector('video');
       if (v) v.paused ? v.play() : v.pause();
     }
-    if (!onNav || mediaFiles.length === 0) return;
-    if (e.key === 'ArrowLeft' && idx > 0) onNav(mediaFiles[idx - 1]);
-    if (e.key === 'ArrowRight' && idx >= 0 && idx < mediaFiles.length - 1) onNav(mediaFiles[idx + 1]);
   };
   document.addEventListener('keydown', keydownHandler);
 

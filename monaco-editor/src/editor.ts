@@ -154,8 +154,8 @@ function ensureMonacoReady(): void {
  * Handles: #RGB, #RGBA, #RRGGBB, #RRGGBBAA, named colors.
  * Returns null if the value cannot be normalized.
  */
-function normalizeColor(value: string): string | null {
-  if (!value) return null;
+function normalizeColor(value: unknown): string | null {
+  if (!value || typeof value !== 'string') return null;
   const v = value.trim();
 
   if (v.startsWith('#')) {

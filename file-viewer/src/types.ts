@@ -3,7 +3,6 @@ export interface ViewerProps {
   fileName: string;
   fileSize: number;
   inline?: boolean;
-  mediaFiles?: { path: string; name: string; size: number }[];
 }
 
 export interface HostApi {
@@ -12,6 +11,7 @@ export interface HostApi {
   readFileRange?(path: string, offset: number, length: number): Promise<ArrayBuffer>;
   getTheme(): Promise<string>;
   onClose(): void;
+  executeCommand?<T = unknown>(command: string, args?: unknown): Promise<T>;
 }
 
 export interface ViewerExtensionApi {

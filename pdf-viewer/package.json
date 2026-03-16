@@ -1,6 +1,6 @@
 {
   "name": "pdf-viewer",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "publisher": "faraday",
   "displayName": "PDF Viewer",
   "description": "View PDF files in Faraday",

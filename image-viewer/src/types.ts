@@ -15,6 +15,7 @@ export interface ViewerProps {
 export interface HostApi {
   readFile(path: string): Promise<ArrayBuffer>;
   readFileText(path: string): Promise<string>;
+  readFileRange?(path: string, offset: number, length: number): Promise<ArrayBuffer>;
   getTheme(): Promise<string>;
   onClose(): void;
   onNavigateMedia?(file: MediaFileRef): void;

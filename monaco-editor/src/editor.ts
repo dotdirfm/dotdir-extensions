@@ -5,7 +5,7 @@
  */
 
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api.js';
-import type { EditorProps, HostApi } from './types';
+import type { ColorThemeData, EditorProps, HostApi } from './types';
 import { Registry as TMRegistry, INITIAL } from 'vscode-textmate';
 import { createOnigScanner, createOnigString, loadWASM } from 'vscode-oniguruma';
 import type { IGrammar, StateStack } from 'vscode-textmate';
@@ -149,12 +149,106 @@ function ensureMonacoReady(): void {
   monacoReady = true;
 }
 
+/**
+ * Normalize a CSS color value to 6-digit hex (without '#') for Monaco token rules.
+ * Handles: #RGB, #RRGGBB, #RRGGBBAA, named colors (white, red, etc.).
+ * Returns null if the value cannot be normalized.
+ */
+function normalizeTokenColor(value: string): string | null {
+  if (!value) return null;
+  const v = value.trim();
+
+  if (v.startsWith('#')) {
+    const hex = v.slice(1);
+    if (hex.length === 6) return hex;
+    if (hex.length === 8) return hex.slice(0, 6); // strip alpha
+    if (hex.length === 3) return hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+    if (hex.length === 4) return hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2]; // strip alpha
+    return null;
+  }
+
+  // Named color — use a canvas to resolve it
+  try {
+    const ctx = document.createElement('canvas').getContext('2d');
+    if (!ctx) return null;
+    ctx.fillStyle = v;
+    const resolved = ctx.fillStyle; // returns '#rrggbb' or 'rgba(...)'
+    if (resolved.startsWith('#')) return resolved.slice(1);
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+/** Convert VS Code tokenColors to Monaco ITokenThemeRule[], and return editor colors. */
+function buildMonacoTheme(
+  themeData: ColorThemeData,
+): { base: 'vs' | 'vs-dark'; rules: monaco.editor.ITokenThemeRule[]; colors: Record<string, string> } {
+  const base: 'vs' | 'vs-dark' = themeData.kind === 'light' ? 'vs' : 'vs-dark';
+  const rules: monaco.editor.ITokenThemeRule[] = [];
+  const colors: Record<string, string> = {};
+
+  if (themeData.colors) {
+    for (const [key, value] of Object.entries(themeData.colors)) {
+      colors[key] = value;
+    }
+  }
+
+  if (Array.isArray(themeData.tokenColors)) {
+    for (const entry of themeData.tokenColors) {
+      if (!entry || typeof entry !== 'object') continue;
+      const tc = entry as { scope?: string | string[]; settings?: { foreground?: string; fontStyle?: string; background?: string } };
+      if (!tc.settings) continue;
+      const scopes = Array.isArray(tc.scope) ? tc.scope : (tc.scope ? [tc.scope] : ['']);
+      for (const scope of scopes) {
+        const rule: monaco.editor.ITokenThemeRule = { token: scope };
+        if (tc.settings.foreground) {
+          const fg = normalizeTokenColor(tc.settings.foreground);
+          if (fg) rule.foreground = fg;
+        }
+        if (tc.settings.fontStyle) rule.fontStyle = tc.settings.fontStyle;
+        if (tc.settings.background) {
+          const bg = normalizeTokenColor(tc.settings.background);
+          if (bg) rule.background = bg;
+        }
+        rules.push(rule);
+      }
+    }
+  }
+
+  return { base, rules, colors };
+}
+
+let themeUnsubscribe: (() => void) | null = null;
+
+function applyColorThemeToEditor(themeData: ColorThemeData): void {
+  const { base, rules, colors } = buildMonacoTheme(themeData);
+  monaco.editor.defineTheme('faraday-custom', { base, inherit: true, rules, colors });
+  monaco.editor.setTheme('faraday-custom');
+  if (rootEl?.parentElement) {
+    rootEl.parentElement.className = themeData.kind === 'light' ? 'faraday-light' : 'faraday-dark';
+  }
+}
+
 export async function createEditorMount(root: HTMLElement, hostApi: HostApi, props: EditorProps): Promise<() => void> {
   ensureMonacoReady();
   await activateGrammars(hostApi, props);
-  const theme = await hostApi.getTheme();
-  const isDark = theme !== 'light' && theme !== 'high-contrast-light';
-  const monacoTheme = isDark ? 'faraday-dark' : 'faraday-light';
+
+  // Determine initial theme
+  const colorTheme = hostApi.getColorTheme?.() ?? null;
+  let monacoTheme: string;
+  let isDark: boolean;
+
+  if (colorTheme?.colors) {
+    const { base, rules, colors } = buildMonacoTheme(colorTheme);
+    monaco.editor.defineTheme('faraday-custom', { base, inherit: true, rules, colors });
+    monacoTheme = 'faraday-custom';
+    isDark = colorTheme.kind !== 'light';
+  } else {
+    const theme = await hostApi.getTheme();
+    isDark = theme !== 'light' && theme !== 'high-contrast-light';
+    monacoTheme = isDark ? 'faraday-dark' : 'faraday-light';
+  }
 
   const content = await hostApi.readFileText(props.filePath);
 
@@ -188,6 +282,19 @@ export async function createEditorMount(root: HTMLElement, hostApi: HostApi, pro
     insertSpaces: true,
   });
   editorInstance = editor;
+
+  // Subscribe to live theme changes
+  if (themeUnsubscribe) themeUnsubscribe();
+  themeUnsubscribe = hostApi.onThemeChange?.((newTheme) => {
+    if (newTheme.colors) {
+      applyColorThemeToEditor(newTheme);
+    } else {
+      // Reverted to built-in theme
+      const fallback = newTheme.kind === 'light' ? 'faraday-light' : 'faraday-dark';
+      monaco.editor.setTheme(fallback);
+      root.className = newTheme.kind === 'light' ? 'faraday-light' : 'faraday-dark';
+    }
+  }) ?? null;
 
   let dirty = false;
   const save = async (): Promise<boolean> => {
@@ -234,6 +341,7 @@ export async function createEditorMount(root: HTMLElement, hostApi: HostApi, pro
   editor.focus();
 
   return () => {
+    if (themeUnsubscribe) { themeUnsubscribe(); themeUnsubscribe = null; }
     editor.dispose();
     editorInstance = null;
     if (rootEl?.parentNode) rootEl.parentNode.removeChild(rootEl);
@@ -251,6 +359,7 @@ export function setEditorLanguage(langId: string): void {
 }
 
 export function disposeEditor(): void {
+  if (themeUnsubscribe) { themeUnsubscribe(); themeUnsubscribe = null; }
   if (editorInstance) {
     editorInstance.dispose();
     editorInstance = null;

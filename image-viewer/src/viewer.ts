@@ -1,4 +1,6 @@
 import type { ViewerProps, HostApi } from './types';
+import { isStreamable, streamVideo } from './video-stream';
+import { attachControls, type ControlsHandle } from './video-controls';
 
 const MIME: Record<string, string> = {
   png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif',
@@ -14,68 +16,93 @@ function getExt(name: string): string {
 }
 
 let objectUrl: string | null = null;
+let streamDestroy: (() => void) | null = null;
+let controlsHandle: ControlsHandle | null = null;
 let rootEl: HTMLElement | null = null;
 let keydownHandler: ((e: KeyboardEvent) => void) | null = null;
 let focusinHandler: ((e: FocusEvent) => void) | null = null;
 
+function cleanup() {
+  if (keydownHandler) { document.removeEventListener('keydown', keydownHandler); keydownHandler = null; }
+  if (focusinHandler) { document.removeEventListener('focusin', focusinHandler); focusinHandler = null; }
+  if (controlsHandle) { controlsHandle.destroy(); controlsHandle = null; }
+  if (streamDestroy) { streamDestroy(); streamDestroy = null; }
+  if (objectUrl) { URL.revokeObjectURL(objectUrl); objectUrl = null; }
+}
+
 export async function mountViewer(root: HTMLElement, hostApi: HostApi, props: ViewerProps): Promise<void> {
-  if (objectUrl) URL.revokeObjectURL(objectUrl);
-  objectUrl = null;
-  if (keydownHandler) {
-    document.removeEventListener('keydown', keydownHandler);
-    keydownHandler = null;
-  }
-  if (focusinHandler) {
-    document.removeEventListener('focusin', focusinHandler);
-    focusinHandler = null;
-  }
+  cleanup();
 
   const ext = getExt(props.fileName);
   const mime = MIME[ext] || 'application/octet-stream';
   const isVideo = /^(mp4|webm|ogv|ogg|mov|m4v)$/.test(ext);
+  const canStream = isVideo && isStreamable(ext) && !!hostApi.readFileRange;
   const inline = !!props.inline;
 
   root.innerHTML = '';
-  root.style.margin = '0';
-  root.style.padding = '0';
-  root.style.width = '100%';
-  root.style.height = '100%';
-  root.style.display = 'flex';
-  root.style.flexDirection = 'column';
-  root.style.overflow = 'hidden';
-  if (inline) {
-    root.tabIndex = -1;
-  }
+  root.style.cssText = 'margin:0;padding:0;width:100%;height:100%;display:flex;flex-direction:column;overflow:hidden;';
+  if (inline) root.tabIndex = -1;
 
   const wrap = document.createElement('div');
-  wrap.style.cssText = 'flex:1;min-height:0;min-width:0;width:100%;display:flex;align-items:center;justify-content:center;overflow:auto;background:#1a1a1a;';
   if (inline) wrap.tabIndex = -1;
   rootEl = wrap;
   root.appendChild(wrap);
 
-  const buf = await hostApi.readFile(props.filePath);
-  const blob = new Blob([buf], { type: mime });
-  const url = URL.createObjectURL(blob);
-  objectUrl = url;
-
   if (isVideo) {
+    wrap.style.cssText = 'flex:1;min-height:0;width:100%;position:relative;background:#000;overflow:hidden;';
+
     const video = document.createElement('video');
-    video.src = url;
-    video.controls = true;
-    video.style.maxWidth = '100%';
-    video.style.maxHeight = '100%';
+    video.style.cssText = 'width:100%;height:100%;object-fit:contain;display:block;';
+    video.autoplay = true;
+    video.playsInline = true;
     if (inline) video.tabIndex = -1;
-    video.onclick = () => (video.paused ? video.play() : video.pause());
     wrap.appendChild(video);
+
+    controlsHandle = attachControls(video, wrap);
+
+    let fellBack = false;
+    const fallbackToBlob = async () => {
+      if (fellBack) return;
+      fellBack = true;
+      if (streamDestroy) { streamDestroy(); streamDestroy = null; }
+      const buf = await hostApi.readFile(props.filePath);
+      const blob = new Blob([buf], { type: mime });
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      objectUrl = URL.createObjectURL(blob);
+      video.src = objectUrl;
+      video.play().catch(() => {});
+      controlsHandle?.setStreaming(false);
+    };
+
+    if (canStream) {
+      controlsHandle.setStreaming(true);
+      const timer = setTimeout(fallbackToBlob, 15000);
+      video.addEventListener('canplay', () => clearTimeout(timer), { once: true });
+      video.addEventListener('error', () => { clearTimeout(timer); fallbackToBlob(); }, { once: true });
+      try {
+        streamDestroy = streamVideo(
+          video,
+          (offset, length) => hostApi.readFileRange!(props.filePath, offset, length),
+          props.fileSize,
+        );
+      } catch {
+        clearTimeout(timer);
+        await fallbackToBlob();
+      }
+    } else {
+      controlsHandle.setStreaming(false);
+    }
   } else {
+    wrap.style.cssText = 'flex:1;min-height:0;min-width:0;width:100%;display:flex;align-items:center;justify-content:center;overflow:auto;background:#1a1a1a;';
+
+    const buf = await hostApi.readFile(props.filePath);
+    const blob = new Blob([buf], { type: mime });
+    objectUrl = URL.createObjectURL(blob);
+
     const img = document.createElement('img');
-    img.src = url;
+    img.src = objectUrl;
     img.alt = props.fileName;
-    img.style.maxWidth = '100%';
-    img.style.maxHeight = '100%';
-    img.style.width = 'auto';
-    img.style.height = 'auto';
-    img.style.objectFit = 'contain';
+    img.style.cssText = 'max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;';
     if (inline) img.tabIndex = -1;
     wrap.appendChild(img);
   }
@@ -86,6 +113,11 @@ export async function mountViewer(root: HTMLElement, hostApi: HostApi, props: Vi
 
   keydownHandler = (e: KeyboardEvent) => {
     if (e.key === 'Escape') hostApi.onClose();
+    if (e.key === ' ' && isVideo) {
+      e.preventDefault();
+      const v = wrap.querySelector('video');
+      if (v) v.paused ? v.play() : v.pause();
+    }
     if (!onNav || mediaFiles.length === 0) return;
     if (e.key === 'ArrowLeft' && idx > 0) onNav(mediaFiles[idx - 1]);
     if (e.key === 'ArrowRight' && idx >= 0 && idx < mediaFiles.length - 1) onNav(mediaFiles[idx + 1]);
@@ -102,20 +134,7 @@ export async function mountViewer(root: HTMLElement, hostApi: HostApi, props: Vi
 }
 
 export function unmountViewer(): void {
-  if (keydownHandler) {
-    document.removeEventListener('keydown', keydownHandler);
-    keydownHandler = null;
-  }
-  if (focusinHandler) {
-    document.removeEventListener('focusin', focusinHandler);
-    focusinHandler = null;
-  }
-  if (objectUrl) {
-    URL.revokeObjectURL(objectUrl);
-    objectUrl = null;
-  }
-  if (rootEl?.parentNode) {
-    rootEl.parentNode.removeChild(rootEl);
-  }
+  cleanup();
+  if (rootEl?.parentNode) rootEl.parentNode.removeChild(rootEl);
   rootEl = null;
 }

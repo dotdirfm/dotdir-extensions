@@ -24,11 +24,19 @@ export interface EditorProps {
   grammars?: EditorGrammarPayload[];
 }
 
+export interface ColorThemeData {
+  kind: 'dark' | 'light';
+  colors?: Record<string, string>;
+  tokenColors?: unknown[];
+}
+
 export interface HostApi {
   readFile(path: string): Promise<ArrayBuffer>;
   readFileText(path: string): Promise<string>;
   writeFile(path: string, content: string): Promise<void>;
   getTheme(): Promise<string>;
+  getColorTheme?(): ColorThemeData | null;
+  onThemeChange?(callback: (theme: ColorThemeData) => void): () => void;
   onClose(): void;
   getOnigurumaWasm?(): Promise<ArrayBuffer>;
 }

@@ -5,7 +5,9 @@
   "displayName": "Image & Video Viewer",
   "description": "View images and video files in Faraday",
   "type": "module",
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "vite build",
     "dev": "vite build --watch"
@@ -15,13 +17,33 @@
       {
         "id": "image-viewer",
         "label": "Image/Video Viewer",
-        "patterns": ["*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp", "*.webp", "*.ico", "*.svg", "*.avif", "*.tiff", "*.tif", "*.mp4", "*.webm", "*.ogv", "*.ogg", "*.mov", "*.m4v"],
+        "patterns": [
+          "*.png",
+          "*.jpg",
+          "*.jpeg",
+          "*.gif",
+          "*.bmp",
+          "*.webp",
+          "*.ico",
+          "*.svg",
+          "*.avif",
+          "*.tiff",
+          "*.tif",
+          "*.mp4",
+          "*.webm",
+          "*.ogv",
+          "*.ogg",
+          "*.mov",
+          "*.m4v"
+        ],
         "entry": "dist/viewer.iife.js",
         "priority": 10
       }
     ]
   },
-  "dependencies": {},
+  "dependencies": {
+    "mp4box": "^2.3.0"
+  },
   "devDependencies": {
     "esbuild": "^0.27.0",
     "typescript": "~5.9.3",

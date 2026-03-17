@@ -1,6 +1,6 @@
 {
   "name": "image-viewer",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "publisher": "faraday",
   "displayName": "Image & Video Viewer",
   "description": "View images and video files in Faraday",

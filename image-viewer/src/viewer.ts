@@ -23,6 +23,7 @@ let navHandle: NavOverlayHandle | null = null;
 let rootEl: HTMLElement | null = null;
 let keydownHandler: ((e: KeyboardEvent) => void) | null = null;
 let focusinHandler: ((e: FocusEvent) => void) | null = null;
+let disposeFileChange: (() => void) | null = null;
 
 function cleanup() {
   if (keydownHandler) { document.removeEventListener('keydown', keydownHandler); keydownHandler = null; }
@@ -31,6 +32,7 @@ function cleanup() {
   if (controlsHandle) { controlsHandle.destroy(); controlsHandle = null; }
   if (streamDestroy) { streamDestroy(); streamDestroy = null; }
   if (objectUrl) { URL.revokeObjectURL(objectUrl); objectUrl = null; }
+  if (disposeFileChange) { disposeFileChange(); disposeFileChange = null; }
 }
 
 export async function mountViewer(root: HTMLElement, hostApi: HostApi, props: ViewerProps): Promise<void> {
@@ -112,6 +114,17 @@ export async function mountViewer(root: HTMLElement, hostApi: HostApi, props: Vi
 
   // Navigation overlay (arrows + counter)
   navHandle = createNavOverlay(wrap, hostApi);
+
+  // Re-subscribe to external file changes for this image/video.
+  if (hostApi.onFileChange) {
+    disposeFileChange = hostApi.onFileChange(async () => {
+      try {
+        await mountViewer(root, hostApi, props);
+      } catch {
+        // ignore refresh errors
+      }
+    });
+  }
 
   keydownHandler = (e: KeyboardEvent) => {
     if (e.key === 'Escape') hostApi.onClose();

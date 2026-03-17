@@ -1,6 +1,6 @@
 {
   "name": "csv-viewer",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "publisher": "faraday",
   "displayName": "CSV Viewer",
   "description": "View CSV files in Faraday",

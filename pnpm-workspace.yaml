@@ -5,3 +5,4 @@ packages:
   - "csv-viewer"
   - "pdf-viewer"
   - "font-viewer"
+  - "sqlite-editor"

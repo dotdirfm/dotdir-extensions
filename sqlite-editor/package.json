@@ -1,0 +1,44 @@
+{
+  "name": "sqlite-editor",
+  "version": "1.0.0",
+  "publisher": "faraday",
+  "displayName": "SQLite Editor",
+  "description": "Browse and query SQLite databases in Faraday",
+  "type": "module",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite build --watch"
+  },
+  "contributes": {
+    "editors": [
+      {
+        "id": "sqlite-editor",
+        "label": "SQLite Editor",
+        "patterns": [
+          "*.sqlite",
+          "*.sqlite3",
+          "*.db",
+          "*.db3"
+        ],
+        "entry": "dist/editor.iife.js",
+        "priority": 50
+      }
+    ]
+  },
+  "dependencies": {
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "sql.js": "^1.13.0"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.12",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^5.0.2",
+    "esbuild": "^0.27.0",
+    "typescript": "~5.9.3",
+    "vite": "^8.0.0"
+  }
+}

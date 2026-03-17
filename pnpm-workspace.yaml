@@ -4,3 +4,4 @@ packages:
   - "file-viewer"
   - "csv-viewer"
   - "pdf-viewer"
+  - "font-viewer"

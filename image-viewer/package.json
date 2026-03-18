@@ -1,6 +1,6 @@
 {
   "name": "image-viewer",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "publisher": "faraday",
   "displayName": "Image & Video Viewer",
   "description": "View images and video files in Faraday",
@@ -38,6 +38,28 @@
         ],
         "entry": "dist/viewer.iife.js",
         "priority": 10
+      }
+    ],
+    "commands": [
+      {
+        "command": "imageViewer.navigatePrev",
+        "title": "Image Viewer: Previous"
+      },
+      {
+        "command": "imageViewer.navigateNext",
+        "title": "Image Viewer: Next"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "imageViewer.navigatePrev",
+        "key": "left",
+        "when": "focusViewer"
+      },
+      {
+        "command": "imageViewer.navigateNext",
+        "key": "right",
+        "when": "focusViewer"
       }
     ]
   },

@@ -8,7 +8,7 @@ export interface NavOverlayHandle {
   updateIndex(index: number, total: number): void;
 }
 
-const MEDIA_PATTERNS = ['*.png', '*.jpg', '*.jpeg', '*.gif', '*.bmp', '*.webp', '*.ico', '*.svg', '*.avif', '*.tiff', '*.tif', '*.mp4', '*.m4v', '*.webm', '*.ogv', '*.ogg', '*.mov'];
+export const MEDIA_PATTERNS = ['*.png', '*.jpg', '*.jpeg', '*.gif', '*.bmp', '*.webp', '*.ico', '*.svg', '*.avif', '*.tiff', '*.tif', '*.mp4', '*.m4v', '*.webm', '*.ogv', '*.ogg', '*.mov'];
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, css: string, html?: string): HTMLElementTagNameMap[K] {
   const e = document.createElement(tag);
@@ -83,13 +83,6 @@ export function createNavOverlay(container: HTMLElement, hostApi: HostApi): NavO
   btnPrev.addEventListener('click', navPrev);
   btnNext.addEventListener('click', navNext);
 
-  // Keyboard navigation
-  const onKey = (e: KeyboardEvent) => {
-    if (e.key === 'ArrowLeft') exec('navigatePrev', { patterns: MEDIA_PATTERNS });
-    if (e.key === 'ArrowRight') exec('navigateNext', { patterns: MEDIA_PATTERNS });
-  };
-  document.addEventListener('keydown', onKey);
-
   // Fetch initial index
   exec<{ index: number; total: number }>('getFileIndex', { patterns: MEDIA_PATTERNS })
     .then((r) => { if (r) updateIndex(r.index, r.total); })
@@ -97,7 +90,6 @@ export function createNavOverlay(container: HTMLElement, hostApi: HostApi): NavO
 
   return {
     destroy() {
-      document.removeEventListener('keydown', onKey);
       container.removeEventListener('mouseenter', showArrows);
       container.removeEventListener('mouseleave', hideArrows);
       btnPrev.removeEventListener('click', navPrev);

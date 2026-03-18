@@ -1,7 +1,7 @@
 import type { ViewerProps, HostApi } from './types';
 import { isStreamable, streamVideo } from './video-stream';
 import { attachControls, type ControlsHandle } from './video-controls';
-import { createNavOverlay, type NavOverlayHandle } from './nav-overlay';
+import { createNavOverlay, type NavOverlayHandle, MEDIA_PATTERNS } from './nav-overlay';
 
 const MIME: Record<string, string> = {
   png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif',
@@ -24,6 +24,8 @@ let rootEl: HTMLElement | null = null;
 let keydownHandler: ((e: KeyboardEvent) => void) | null = null;
 let focusinHandler: ((e: FocusEvent) => void) | null = null;
 let disposeFileChange: (() => void) | null = null;
+let disposeNavPrevCommand: { dispose: () => void } | null = null;
+let disposeNavNextCommand: { dispose: () => void } | null = null;
 
 function cleanup() {
   if (keydownHandler) { document.removeEventListener('keydown', keydownHandler); keydownHandler = null; }
@@ -33,6 +35,8 @@ function cleanup() {
   if (streamDestroy) { streamDestroy(); streamDestroy = null; }
   if (objectUrl) { URL.revokeObjectURL(objectUrl); objectUrl = null; }
   if (disposeFileChange) { disposeFileChange(); disposeFileChange = null; }
+  if (disposeNavPrevCommand) { disposeNavPrevCommand.dispose(); disposeNavPrevCommand = null; }
+  if (disposeNavNextCommand) { disposeNavNextCommand.dispose(); disposeNavNextCommand = null; }
 }
 
 export async function mountViewer(root: HTMLElement, hostApi: HostApi, props: ViewerProps): Promise<void> {
@@ -115,6 +119,27 @@ export async function mountViewer(root: HTMLElement, hostApi: HostApi, props: Vi
 
   // Navigation overlay (arrows + counter)
   navHandle = createNavOverlay(wrap, api);
+
+  // Arrow key navigation via Faraday command system (no document-level key listeners).
+  if (api.commands?.registerCommand && api.executeCommand) {
+    const prevCommandId = 'imageViewer.navigatePrev';
+    const nextCommandId = 'imageViewer.navigateNext';
+
+    disposeNavPrevCommand = api.commands.registerCommand(
+      prevCommandId,
+      async () => {
+        await api.executeCommand?.('navigatePrev', { patterns: MEDIA_PATTERNS });
+      },
+      { title: 'Image Viewer: Previous', when: 'focusViewer' }
+    );
+    disposeNavNextCommand = api.commands.registerCommand(
+      nextCommandId,
+      async () => {
+        await api.executeCommand?.('navigateNext', { patterns: MEDIA_PATTERNS });
+      },
+      { title: 'Image Viewer: Next', when: 'focusViewer' }
+    );
+  }
 
   // Re-subscribe to external file changes for this image/video.
   if (api.onFileChange) {

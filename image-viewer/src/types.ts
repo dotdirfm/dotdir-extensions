@@ -13,6 +13,21 @@ export interface HostApi {
   getTheme(): Promise<string>;
   onClose(): void;
   executeCommand?<T = unknown>(command: string, args?: unknown): Promise<T>;
+
+  /**
+   * Commands + keybindings API exposed via `window.frdy.commands.*`.
+   * This mimics VS Code's command/keybinding model.
+   */
+  commands?: {
+    registerCommand: (
+      commandId: string,
+      handler: (...args: unknown[]) => void | Promise<void>,
+      options?: { title?: string; category?: string; icon?: string; when?: string }
+    ) => { dispose: () => void };
+    registerKeybinding: (
+      binding: { command: string; key: string; mac?: string; when?: string }
+    ) => { dispose: () => void };
+  };
 }
 
 declare global {

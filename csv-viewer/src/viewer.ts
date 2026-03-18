@@ -50,6 +50,7 @@ let rootEl: HTMLElement | null = null;
 let keydownHandler: ((e: KeyboardEvent) => void) | null = null;
 
 export async function mountViewer(root: HTMLElement, hostApi: HostApi, props: ViewerProps): Promise<void> {
+  const api = (globalThis as unknown as { frdy?: HostApi }).frdy ?? hostApi;
   if (keydownHandler) {
     document.removeEventListener('keydown', keydownHandler);
     keydownHandler = null;
@@ -67,7 +68,7 @@ export async function mountViewer(root: HTMLElement, hostApi: HostApi, props: Vi
     root.tabIndex = -1;
   }
 
-  const text = await hostApi.readFileText(props.filePath);
+  const text = await api.readFileText(props.filePath);
   const rows = parseCsv(text);
 
   const scrollWrap = document.createElement('div');
@@ -114,7 +115,7 @@ export async function mountViewer(root: HTMLElement, hostApi: HostApi, props: Vi
   scrollWrap.appendChild(table);
 
   keydownHandler = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') hostApi.onClose();
+    if (e.key === 'Escape') api.onClose();
   };
   document.addEventListener('keydown', keydownHandler);
 }

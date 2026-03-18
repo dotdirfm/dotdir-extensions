@@ -243,6 +243,7 @@ function useStyles() {
 }
 
 function App({ hostApi, editorProps }: { hostApi: HostApi; editorProps: EditorProps }) {
+  const api = (globalThis as unknown as { frdy?: HostApi }).frdy ?? hostApi;
   const s = useStyles();
   const [sql, setSql] = useState(DEFAULT_QUERY);
   const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
@@ -254,7 +255,7 @@ function App({ hostApi, editorProps }: { hostApi: HostApi; editorProps: EditorPr
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') hostApi.onClose();
+      if (e.key === 'Escape') api.onClose();
       if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
         void runQuery();
       }
@@ -262,7 +263,7 @@ function App({ hostApi, editorProps }: { hostApi: HostApi; editorProps: EditorPr
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hostApi, sql]);
+  }, [api, sql]);
 
   useEffect(() => {
     let cancelled = false;
@@ -271,7 +272,7 @@ function App({ hostApi, editorProps }: { hostApi: HostApi; editorProps: EditorPr
       setStatusMsg('Loading database…');
       setResult({ kind: 'empty' });
       try {
-        const buffer = await hostApi.readFile(editorProps.filePath);
+        const buffer = await api.readFile(editorProps.filePath);
         if (cancelled) return;
 
         const SQL: SqlJsStatic = await initSqlJs({
@@ -308,7 +309,7 @@ function App({ hostApi, editorProps }: { hostApi: HostApi; editorProps: EditorPr
     return () => {
       cancelled = true;
     };
-  }, [editorProps.filePath, hostApi]);
+  }, [editorProps.filePath, api]);
 
   async function runQuery(sqlOverride?: string): Promise<void> {
     const db = dbInstance;
@@ -504,6 +505,7 @@ let mountedRootEl: HTMLElement | null = null;
 let dbInstance: Database | null = null;
 
 export async function mountEditor(root: HTMLElement, hostApi: HostApi, props: EditorProps): Promise<void> {
+  const api = (globalThis as unknown as { frdy?: HostApi }).frdy ?? hostApi;
   root.innerHTML = '';
   root.style.margin = '0';
   root.style.padding = '0';
@@ -513,7 +515,7 @@ export async function mountEditor(root: HTMLElement, hostApi: HostApi, props: Ed
 
   mountedRootEl = root;
   reactRoot = createRoot(root);
-  reactRoot.render(<App hostApi={hostApi} editorProps={props} />);
+  reactRoot.render(<App hostApi={api} editorProps={props} />);
 }
 
 export function unmountEditor(): void {

@@ -10,7 +10,7 @@ export default defineConfig({
       fileName: 'viewer',
       formats: ['iife'],
     },
-    minify: 'esbuild',
+    minify: false, //'esbuild',
     sourcemap: false,
   },
 });

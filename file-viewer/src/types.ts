@@ -16,6 +16,14 @@ export interface HostApi {
   executeCommand?<T = unknown>(command: string, args?: unknown): Promise<T>;
 }
 
+declare global {
+  // `frdy` is injected by Faraday's iframe bootstrap.
+  // Extensions can directly call `frdy.readFile(...)`, etc.
+  // (This will later be provided as an npm package.)
+  // eslint-disable-next-line no-var
+  var frdy: HostApi | undefined;
+}
+
 export interface ViewerExtensionApi {
   mount(root: HTMLElement, hostApi: HostApi, props: ViewerProps): Promise<void>;
   unmount(): Promise<void>;

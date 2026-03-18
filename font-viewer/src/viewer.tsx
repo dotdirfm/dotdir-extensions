@@ -105,6 +105,7 @@ function pickSamplesForScripts(scripts: Array<{ id: ScriptId }>): Sample[] {
 
 function App(props: { hostApi: HostApi; viewerProps: ViewerProps }) {
   const { hostApi, viewerProps } = props;
+  const api = (globalThis as unknown as { frdy?: HostApi }).frdy ?? hostApi;
   const [family, setFamily] = useState(() => randomFamilyName(viewerProps.fileName));
   const [fontFaceStatus, setFontFaceStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
   const [fontFaceError, setFontFaceError] = useState<string | null>(null);
@@ -121,7 +122,7 @@ function App(props: { hostApi: HostApi; viewerProps: ViewerProps }) {
       setParseError(null);
       setFont(undefined);
 
-      const buffer = await hostApi.readFile(viewerProps.filePath);
+      const buffer = await api.readFile(viewerProps.filePath);
       if (cancelled) return;
 
       // Register font for preview (works for ttf/otf/woff/woff2 in modern browsers).
@@ -162,11 +163,11 @@ function App(props: { hostApi: HostApi; viewerProps: ViewerProps }) {
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') hostApi.onClose();
+      if (e.key === 'Escape') api.onClose();
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
-  }, [hostApi]);
+  }, [api]);
 
   const scripts = useMemo(() => detectScriptsFromFont(font), [font]);
   const samples = useMemo(() => pickSamplesForScripts(scripts), [scripts]);
@@ -419,6 +420,7 @@ let reactRoot: Root | null = null;
 let mountedRootEl: HTMLElement | null = null;
 
 export async function mountViewer(root: HTMLElement, hostApi: HostApi, props: ViewerProps): Promise<void> {
+  const api = (globalThis as unknown as { frdy?: HostApi }).frdy ?? hostApi;
   root.innerHTML = '';
   root.style.margin = '0';
   root.style.padding = '0';
@@ -429,7 +431,7 @@ export async function mountViewer(root: HTMLElement, hostApi: HostApi, props: Vi
 
   mountedRootEl = root;
   reactRoot = createRoot(root);
-  reactRoot.render(<App hostApi={hostApi} viewerProps={props} />);
+  reactRoot.render(<App hostApi={api} viewerProps={props} />);
 }
 
 export function unmountViewer(): void {

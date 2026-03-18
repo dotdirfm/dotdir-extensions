@@ -36,12 +36,13 @@ function cleanup() {
 }
 
 export async function mountViewer(root: HTMLElement, hostApi: HostApi, props: ViewerProps): Promise<void> {
+  const api = (globalThis as unknown as { frdy?: HostApi }).frdy ?? hostApi;
   cleanup();
 
   const ext = getExt(props.fileName);
   const mime = MIME[ext] || 'application/octet-stream';
   const isVideo = /^(mp4|webm|ogv|ogg|mov|m4v)$/.test(ext);
-  const canStream = isVideo && isStreamable(ext) && !!hostApi.readFileRange;
+  const canStream = isVideo && isStreamable(ext) && !!api.readFileRange;
   const inline = !!props.inline;
 
   root.innerHTML = '';
@@ -70,7 +71,7 @@ export async function mountViewer(root: HTMLElement, hostApi: HostApi, props: Vi
       if (fellBack) return;
       fellBack = true;
       if (streamDestroy) { streamDestroy(); streamDestroy = null; }
-      const buf = await hostApi.readFile(props.filePath);
+      const buf = await api.readFile(props.filePath);
       const blob = new Blob([buf], { type: mime });
       if (objectUrl) URL.revokeObjectURL(objectUrl);
       objectUrl = URL.createObjectURL(blob);
@@ -87,7 +88,7 @@ export async function mountViewer(root: HTMLElement, hostApi: HostApi, props: Vi
       try {
         streamDestroy = streamVideo(
           video,
-          (offset, length) => hostApi.readFileRange!(props.filePath, offset, length),
+          (offset, length) => api.readFileRange!(props.filePath, offset, length),
           props.fileSize,
         );
       } catch {
@@ -100,7 +101,7 @@ export async function mountViewer(root: HTMLElement, hostApi: HostApi, props: Vi
   } else {
     wrap.style.cssText = 'flex:1;min-height:0;min-width:0;width:100%;display:flex;align-items:center;justify-content:center;overflow:auto;background:#1a1a1a;position:relative;';
 
-    const buf = await hostApi.readFile(props.filePath);
+    const buf = await api.readFile(props.filePath);
     const blob = new Blob([buf], { type: mime });
     objectUrl = URL.createObjectURL(blob);
 
@@ -113,13 +114,13 @@ export async function mountViewer(root: HTMLElement, hostApi: HostApi, props: Vi
   }
 
   // Navigation overlay (arrows + counter)
-  navHandle = createNavOverlay(wrap, hostApi);
+  navHandle = createNavOverlay(wrap, api);
 
   // Re-subscribe to external file changes for this image/video.
-  if (hostApi.onFileChange) {
-    disposeFileChange = hostApi.onFileChange(async () => {
+  if (api.onFileChange) {
+    disposeFileChange = api.onFileChange(async () => {
       try {
-        await mountViewer(root, hostApi, props);
+        await mountViewer(root, api, props);
       } catch {
         // ignore refresh errors
       }
@@ -127,7 +128,7 @@ export async function mountViewer(root: HTMLElement, hostApi: HostApi, props: Vi
   }
 
   keydownHandler = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') hostApi.onClose();
+    if (e.key === 'Escape') api.onClose();
     if (e.key === ' ' && isVideo) {
       e.preventDefault();
       const v = wrap.querySelector('video');

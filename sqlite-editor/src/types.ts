@@ -19,6 +19,11 @@ export interface HostApi {
   executeCommand?<T = unknown>(command: string, args?: unknown): Promise<T>;
 }
 
+declare global {
+  // eslint-disable-next-line no-var
+  var frdy: HostApi | undefined;
+}
+
 export interface EditorExtensionApi {
   mount(root: HTMLElement, hostApi: HostApi, props: EditorProps): Promise<void>;
   unmount(): Promise<void>;

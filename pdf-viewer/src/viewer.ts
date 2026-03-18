@@ -5,6 +5,7 @@ let rootEl: HTMLElement | null = null;
 let keydownHandler: ((e: KeyboardEvent) => void) | null = null;
 
 export async function mountViewer(root: HTMLElement, hostApi: HostApi, props: ViewerProps): Promise<void> {
+  const api = (globalThis as unknown as { frdy?: HostApi }).frdy ?? hostApi;
   if (objectUrl) URL.revokeObjectURL(objectUrl);
   objectUrl = null;
   if (keydownHandler) {
@@ -30,7 +31,7 @@ export async function mountViewer(root: HTMLElement, hostApi: HostApi, props: Vi
   rootEl = wrap;
   root.appendChild(wrap);
 
-  const buf = await hostApi.readFile(props.filePath);
+  const buf = await api.readFile(props.filePath);
   const blob = new Blob([buf], { type: 'application/pdf' });
   const url = URL.createObjectURL(blob);
   objectUrl = url;
@@ -44,7 +45,7 @@ export async function mountViewer(root: HTMLElement, hostApi: HostApi, props: Vi
   wrap.appendChild(embed);
 
   keydownHandler = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') hostApi.onClose();
+    if (e.key === 'Escape') api.onClose();
   };
   document.addEventListener('keydown', keydownHandler);
 }

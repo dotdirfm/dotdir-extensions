@@ -367,7 +367,8 @@ function stopInertia() {
 
 // ── Mount ──────────────────────────────────────────────────────────────────────
 export async function mountViewer(root: HTMLElement, hostApi: HostApi, props: ViewerProps): Promise<void> {
-  _api = hostApi; _path = props.filePath;
+  _api = (globalThis as unknown as { frdy?: HostApi }).frdy ?? hostApi;
+  _path = props.filePath;
   fileSize = props.fileSize;
   if (_api.statFile) {
     try {
@@ -837,7 +838,7 @@ export async function mountViewer(root: HTMLElement, hostApi: HostApi, props: Vi
     }
 
     switch (e.key) {
-      case 'Escape': hostApi.onClose(); return;
+      case 'Escape': _api.onClose(); return;
       case 'ArrowDown': e.preventDefault(); void scrollDown(1); return;
       case 'ArrowUp': e.preventDefault(); void scrollUp(1); return;
       case 'ArrowLeft':

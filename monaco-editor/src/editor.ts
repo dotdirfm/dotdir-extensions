@@ -36,6 +36,26 @@ class TMState implements monaco.languages.IState {
   }
 }
 
+const COMMON_SCOPE_SUFFIXES = new Set([
+  'js', 'jsx', 'ts', 'tsx', 'json', 'yaml', 'yml', 'md', 'rs', 'py', 'go', 'java', 'c', 'cpp', 'h', 'hpp',
+  'css', 'scss', 'less', 'html', 'xml', 'toml', 'ini', 'sh', 'bash', 'zsh',
+]);
+
+/**
+ * VS Code themes sometimes specify token scopes without language suffixes (e.g. `entity.name.function`)
+ * while TextMate grammars may append `.ts`, `.js`, etc (e.g. `entity.name.function.ts`).
+ *
+ * Monaco matches token theme rules by prefix segments (`.`), so we normalize both sides by stripping
+ * common suffixes when present.
+ */
+function stripLangSuffix(scope: string): string {
+  const m = scope.match(/^(.*)\.([a-zA-Z0-9_-]+)$/);
+  if (!m) return scope;
+  const suffix = m[2]!.toLowerCase();
+  if (!COMMON_SCOPE_SUFFIXES.has(suffix)) return scope;
+  return m[1]!;
+}
+
 // ── Custom grammars (from host) ────────────────────────────────────────
 
 /** Register languages and activate TextMate tokenization when host provides grammars. */
@@ -95,7 +115,7 @@ async function activateGrammars(hostApi: HostApi, props: EditorProps): Promise<v
         const result = grammar!.tokenizeLine(line, tmState.ruleStack);
         const tokens: monaco.languages.IToken[] = result.tokens.map((t) => ({
           startIndex: t.startIndex,
-          scopes: t.scopes[t.scopes.length - 1] ?? 'source',
+          scopes: stripLangSuffix(t.scopes[t.scopes.length - 1] ?? 'source'),
         }));
         return {
           tokens,
@@ -211,7 +231,24 @@ function buildMonacoTheme(
       if (!entry || typeof entry !== 'object') continue;
       const tc = entry as { scope?: string | string[]; settings?: { foreground?: string; fontStyle?: string; background?: string } };
       if (!tc.settings) continue;
-      const scopes = Array.isArray(tc.scope) ? tc.scope : (tc.scope ? [tc.scope] : ['']);
+      const rawScopes = Array.isArray(tc.scope) ? tc.scope : (tc.scope ? [tc.scope] : ['']);
+      const scopes: string[] = [];
+      for (const s of rawScopes) {
+        if (!s) continue;
+        // VS Code allows comma-separated scopes in a single string.
+        for (const part of String(s).split(',')) {
+          const trimmed = part.trim();
+          if (!trimmed) continue;
+          // Monaco doesn't support complex selector syntax; take the first token segment.
+          // (e.g. "meta.function-call variable.function" → "meta.function-call")
+          const simple = trimmed.split(/\s+/)[0]!;
+          if (simple.startsWith('-')) continue;
+          scopes.push(simple);
+          const stripped = stripLangSuffix(simple);
+          if (stripped && stripped !== simple) scopes.push(stripped);
+        }
+      }
+      if (scopes.length === 0) scopes.push('');
       for (const scope of scopes) {
         const rule: monaco.editor.ITokenThemeRule = { token: scope };
         if (tc.settings.foreground) {
@@ -232,6 +269,7 @@ function buildMonacoTheme(
 }
 
 let themeUnsubscribe: (() => void) | null = null;
+let cssVarThemeObserver: MutationObserver | null = null;
 
 function applyColorThemeToEditor(themeData: ColorThemeData): void {
   const { base, rules, colors } = buildMonacoTheme(themeData);
@@ -242,27 +280,49 @@ function applyColorThemeToEditor(themeData: ColorThemeData): void {
   }
 }
 
+function applyCssVarThemeToEditor(isDark: boolean): void {
+  const cs = getComputedStyle(document.documentElement);
+  const bg = normalizeColor(cs.getPropertyValue('--bg')) ?? (isDark ? '#1e1e1e' : '#ffffff');
+  const fg = normalizeColor(cs.getPropertyValue('--fg')) ?? (isDark ? '#d4d4d4' : '#1e1e1e');
+  monaco.editor.defineTheme('faraday-css', {
+    base: isDark ? 'vs-dark' : 'vs',
+    inherit: true,
+    rules: [],
+    colors: {
+      'editor.background': bg,
+      'editor.foreground': fg,
+    },
+  });
+  monaco.editor.setTheme('faraday-css');
+}
+
 export async function createEditorMount(root: HTMLElement, hostApi: HostApi, props: EditorProps): Promise<() => void> {
+  const api = (globalThis as unknown as { frdy?: HostApi }).frdy ?? hostApi;
   ensureMonacoReady();
-  await activateGrammars(hostApi, props);
+  await activateGrammars(api, props);
 
   // Determine initial theme
-  const colorTheme = hostApi.getColorTheme?.() ?? null;
+  const colorTheme = api.getColorTheme?.() ?? null;
   let monacoTheme: string;
   let isDark: boolean;
+  let usingVsCodeTheme = false;
 
-  if (colorTheme?.colors) {
+  if (colorTheme && (colorTheme.colors || (Array.isArray(colorTheme.tokenColors) && colorTheme.tokenColors.length > 0))) {
     const { base, rules, colors } = buildMonacoTheme(colorTheme);
     monaco.editor.defineTheme('faraday-custom', { base, inherit: true, rules, colors });
     monacoTheme = 'faraday-custom';
     isDark = colorTheme.kind !== 'light';
+    usingVsCodeTheme = true;
   } else {
-    const theme = await hostApi.getTheme();
+    const theme = await api.getTheme();
     isDark = theme !== 'light' && theme !== 'high-contrast-light';
-    monacoTheme = isDark ? 'faraday-dark' : 'faraday-light';
+    // Use Faraday CSS variables (pushed into iframe by host) for Monaco background/foreground.
+    applyCssVarThemeToEditor(isDark);
+    monacoTheme = 'faraday-css';
+    usingVsCodeTheme = false;
   }
 
-  const content = await hostApi.readFileText(props.filePath);
+  const content = await api.readFileText(props.filePath);
 
   root.innerHTML = '';
   root.style.margin = '0';
@@ -297,21 +357,33 @@ export async function createEditorMount(root: HTMLElement, hostApi: HostApi, pro
 
   // Subscribe to live theme changes
   if (themeUnsubscribe) themeUnsubscribe();
-  themeUnsubscribe = hostApi.onThemeChange?.((newTheme) => {
-    if (newTheme.colors) {
+  if (cssVarThemeObserver) { cssVarThemeObserver.disconnect(); cssVarThemeObserver = null; }
+  themeUnsubscribe = api.onThemeChange?.((newTheme) => {
+    if (newTheme.colors || (Array.isArray(newTheme.tokenColors) && newTheme.tokenColors.length > 0)) {
+      usingVsCodeTheme = true;
       applyColorThemeToEditor(newTheme);
     } else {
-      // Reverted to built-in theme
-      const fallback = newTheme.kind === 'light' ? 'faraday-light' : 'faraday-dark';
-      monaco.editor.setTheme(fallback);
+      // Faraday theme (CSS vars)
+      usingVsCodeTheme = false;
+      const nextIsDark = newTheme.kind !== 'light';
+      isDark = nextIsDark;
+      applyCssVarThemeToEditor(nextIsDark);
       root.className = newTheme.kind === 'light' ? 'faraday-light' : 'faraday-dark';
     }
   }) ?? null;
 
+  // Also track direct CSS variable pushes (host → iframe) which don't go through onThemeChange.
+  // Host updates `documentElement.style` when Faraday theme changes.
+  cssVarThemeObserver = new MutationObserver(() => {
+    if (usingVsCodeTheme) return;
+    applyCssVarThemeToEditor(isDark);
+  });
+  cssVarThemeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['style'] });
+
   let dirty = false;
   const save = async (): Promise<boolean> => {
     try {
-      await hostApi.writeFile(props.filePath, editor.getValue());
+      await api.writeFile(props.filePath, editor.getValue());
       dirty = false;
       return true;
     } catch {
@@ -337,15 +409,15 @@ export async function createEditorMount(root: HTMLElement, hostApi: HostApi, pro
     keybindings: [monaco.KeyCode.Escape],
     run: () => {
       if (!dirty) {
-        hostApi.onClose();
+        api.onClose();
         return;
       }
       if (window.confirm('Save changes before closing?')) {
         void save().then((ok) => {
-          if (ok) hostApi.onClose();
+          if (ok) api.onClose();
         });
       } else {
-        hostApi.onClose();
+        api.onClose();
       }
     },
   });
@@ -354,6 +426,7 @@ export async function createEditorMount(root: HTMLElement, hostApi: HostApi, pro
 
   return () => {
     if (themeUnsubscribe) { themeUnsubscribe(); themeUnsubscribe = null; }
+    if (cssVarThemeObserver) { cssVarThemeObserver.disconnect(); cssVarThemeObserver = null; }
     editor.dispose();
     editorInstance = null;
     if (rootEl?.parentNode) rootEl.parentNode.removeChild(rootEl);

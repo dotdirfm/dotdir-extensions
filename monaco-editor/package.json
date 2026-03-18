@@ -1,6 +1,6 @@
 {
   "name": "monaco-editor",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "publisher": "faraday",
   "displayName": "Monaco Editor",
   "description": "Monaco-based code editor for Faraday with syntax highlighting",

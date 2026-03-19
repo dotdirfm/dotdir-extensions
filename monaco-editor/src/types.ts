@@ -4,8 +4,16 @@
  */
 
 export interface EditorGrammarPayload {
-  contribution: { language: string; scopeName: string; path: string; embeddedLanguages?: Record<string, string> };
-  content: object;
+  contribution: {
+    language: string;
+    scopeName: string;
+    path: string;
+    embeddedLanguages?: Record<string, string>;
+  };
+  /** Absolute path to grammar JSON file (used for lazy-loading). */
+  path?: string;
+  /** Parsed TextMate grammar JSON (optional; may be lazy-loaded). */
+  content?: object;
 }
 
 export interface EditorLanguagePayload {

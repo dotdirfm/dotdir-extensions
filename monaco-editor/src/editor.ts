@@ -8,7 +8,9 @@ import * as monaco from 'monaco-editor/esm/vs/editor/editor.api.js';
 import type { ColorThemeData, EditorProps, HostApi } from './types';
 import { Registry as TMRegistry, INITIAL } from 'vscode-textmate';
 import { createOnigScanner, createOnigString, loadWASM } from 'vscode-oniguruma';
-import type { IGrammar, StateStack } from 'vscode-textmate';
+import type { StateStack } from 'vscode-textmate';
+// @ts-expect-error - Vite ?url for asset URL in extension iframe
+import onigWasmUrl from 'vscode-oniguruma/release/onig.wasm?url';
 
 // Inline worker so the extension works when loaded as a single blob (no separate worker URL).
 // @ts-expect-error - Vite ?worker&inline
@@ -20,6 +22,11 @@ import monacoCss from 'monaco-editor/min/vs/editor/editor.main.css?raw';
 let editorInstance: monaco.editor.IStandaloneCodeEditor | null = null;
 let rootEl: HTMLDivElement | null = null;
 let monacoReady = false;
+
+// Cache Oniguruma + TextMate grammar JSON so language switches don't re-fetch everything.
+let onigWasmLoadPromise: Promise<void> | null = null;
+const grammarJsonCache = new Map<string, object | null>(); // key: scopeName
+const activatedTokenProviders = new Set<string>(); // key: `${langIdLower}\0${scopeName}`
 
 // ── TextMate state wrapper for Monaco ─────────────────────────────────
 
@@ -58,11 +65,35 @@ function stripLangSuffix(scope: string): string {
 
 // ── Custom grammars (from host) ────────────────────────────────────────
 
-/** Register languages and activate TextMate tokenization when host provides grammars. */
-async function activateGrammars(hostApi: HostApi, props: EditorProps): Promise<void> {
+async function ensureOnigurumaWasmLoaded(hostApi: HostApi): Promise<void> {
+  if (onigWasmLoadPromise) return onigWasmLoadPromise;
+  onigWasmLoadPromise = (async () => {
+    // Prefer direct VFS fetch for `onig.wasm` (works when the whole extension bundle is served from VFS).
+    // Fall back to host-provided WASM if direct fetch fails.
+    let wasm: ArrayBuffer | null = null;
+    try {
+      const r = await fetch(onigWasmUrl);
+      wasm = await r.arrayBuffer();
+    } catch {
+      wasm = null;
+    }
+    if (!wasm && hostApi.getOnigurumaWasm) {
+      wasm = await hostApi.getOnigurumaWasm();
+    }
+    if (!wasm) return;
+    await loadWASM(wasm);
+  })();
+  return onigWasmLoadPromise;
+}
+
+/**
+ * Ensure TextMate tokenization is registered for a specific language id.
+ * Used for initial mount and for language switching without reloading the iframe.
+ */
+export async function ensureTextMateLanguage(hostApi: HostApi, props: EditorProps, targetLangId: string): Promise<void> {
   const { languages = [], grammars = [] } = props;
+  if (!targetLangId) return;
   if (languages.length === 0 && grammars.length === 0) return;
-  if (!hostApi.getOnigurumaWasm) return;
 
   for (const lang of languages) {
     const safeAliases = lang.aliases?.filter((a): a is string => typeof a === 'string' && a.length > 0);
@@ -75,18 +106,25 @@ async function activateGrammars(hostApi: HostApi, props: EditorProps): Promise<v
   }
 
   if (grammars.length === 0) return;
+  await ensureOnigurumaWasmLoaded(hostApi);
 
-  const wasm = await hostApi.getOnigurumaWasm();
-  await loadWASM(wasm);
-
-  const grammarContents = new Map<string, object>();
+  // Map `languageId -> scopeName` (case-insensitive match).
   const languageToScope = new Map<string, string>();
-  for (const { contribution, content } of grammars) {
-    grammarContents.set(contribution.scopeName, content);
+  const scopeToPath = new Map<string, string>();
+  for (const g of grammars) {
+    const { contribution, path } = g;
+    const scopeName = contribution.scopeName;
+    if (path) scopeToPath.set(scopeName, path);
     if (contribution.language) {
-      languageToScope.set(contribution.language, contribution.scopeName);
+      languageToScope.set(contribution.language.toLowerCase(), scopeName);
     }
   }
+
+  const targetLanguageId = targetLangId.toLowerCase();
+  const targetScopeName = languageToScope.get(targetLanguageId);
+  if (!targetScopeName) return;
+  const activatedKey = `${targetLanguageId}\0${targetScopeName}`;
+  if (activatedTokenProviders.has(activatedKey)) return;
 
   const tmRegistry = new TMRegistry({
     onigLib: Promise.resolve({
@@ -94,36 +132,47 @@ async function activateGrammars(hostApi: HostApi, props: EditorProps): Promise<v
       createOnigString: (s: string) => createOnigString(s),
     }),
     loadGrammar: async (scopeName: string) => {
-      const content = grammarContents.get(scopeName);
-      return content ? (content as never) : null;
+      const cached = grammarJsonCache.get(scopeName);
+      if (cached !== undefined) return cached ? (cached as never) : null;
+
+      const grammarPath = scopeToPath.get(scopeName);
+      if (!grammarPath) {
+        grammarJsonCache.set(scopeName, null);
+        return null;
+      }
+
+      try {
+        const jsonText = await hostApi.readFileText(grammarPath);
+        const parsed = JSON.parse(jsonText) as object;
+        grammarJsonCache.set(scopeName, parsed);
+        return parsed as never;
+      } catch {
+        grammarJsonCache.set(scopeName, null);
+        return null;
+      }
     },
   });
 
-  for (const [languageId, scopeName] of languageToScope) {
-    let grammar: IGrammar | null = null;
-    try {
-      grammar = await tmRegistry.loadGrammar(scopeName);
-    } catch {
-      continue;
-    }
-    if (!grammar) continue;
+  // Register TextMate tokens only for the current editor language.
+  const grammar = await tmRegistry.loadGrammar(targetScopeName).catch(() => null);
+  if (!grammar) return;
+  monaco.languages.setTokensProvider(targetLangId, {
+    getInitialState: () => new TMState(INITIAL),
+    tokenize: (line: string, state: monaco.languages.IState) => {
+      const tmState = state as TMState;
+      const result = grammar!.tokenizeLine(line, tmState.ruleStack);
+      const tokens: monaco.languages.IToken[] = result.tokens.map((t) => ({
+        startIndex: t.startIndex,
+        scopes: stripLangSuffix(t.scopes[t.scopes.length - 1] ?? 'source'),
+      }));
+      return {
+        tokens,
+        endState: new TMState(result.ruleStack),
+      };
+    },
+  });
 
-    monaco.languages.setTokensProvider(languageId, {
-      getInitialState: () => new TMState(INITIAL),
-      tokenize: (line: string, state: monaco.languages.IState) => {
-        const tmState = state as TMState;
-        const result = grammar!.tokenizeLine(line, tmState.ruleStack);
-        const tokens: monaco.languages.IToken[] = result.tokens.map((t) => ({
-          startIndex: t.startIndex,
-          scopes: stripLangSuffix(t.scopes[t.scopes.length - 1] ?? 'source'),
-        }));
-        return {
-          tokens,
-          endState: new TMState(result.ruleStack),
-        };
-      },
-    });
-  }
+  activatedTokenProviders.add(activatedKey);
 }
 
 function ensureMonacoReady(): void {
@@ -299,7 +348,7 @@ function applyCssVarThemeToEditor(isDark: boolean): void {
 export async function createEditorMount(root: HTMLElement, hostApi: HostApi, props: EditorProps): Promise<() => void> {
   const api = (globalThis as unknown as { frdy?: HostApi }).frdy ?? hostApi;
   ensureMonacoReady();
-  await activateGrammars(api, props);
+  await ensureTextMateLanguage(api, props, props.langId);
 
   // Determine initial theme
   const colorTheme = api.getColorTheme?.() ?? null;

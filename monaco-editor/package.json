@@ -129,7 +129,6 @@
     "grammars": []
   },
   "dependencies": {
-    "comlink": "^4.4.2",
     "monaco-editor": "^0.55.1",
     "vscode-oniguruma": "^2.0.1",
     "vscode-textmate": "^9.3.2"

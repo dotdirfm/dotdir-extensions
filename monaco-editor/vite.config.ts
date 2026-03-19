@@ -6,6 +6,7 @@ import { defineConfig } from 'vite';
  * executes it in a blob: URL context, so the output must be self-contained.
  */
 export default defineConfig({
+  base: './',
   build: {
     outDir: 'dist',
     emptyOutDir: true,
@@ -13,7 +14,9 @@ export default defineConfig({
       entry: 'src/entry.ts',
       name: 'FaradayMonacoEditor',
       fileName: 'editor',
+//      formats: ['esm'],
       formats: ['iife'],
+//      formats: ['cjs'],
     },
     minify: 'esbuild',
     sourcemap: false,

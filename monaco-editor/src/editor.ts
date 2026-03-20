@@ -65,7 +65,7 @@ function stripLangSuffix(scope: string): string {
 
 // ── Custom grammars (from host) ────────────────────────────────────────
 
-async function ensureOnigurumaWasmLoaded(hostApi: HostApi): Promise<void> {
+async function ensureOnigurumaWasmLoaded(): Promise<void> {
   if (onigWasmLoadPromise) return onigWasmLoadPromise;
   onigWasmLoadPromise = (async () => {
     // Prefer direct VFS fetch for `onig.wasm` (works when the whole extension bundle is served from VFS).
@@ -76,9 +76,6 @@ async function ensureOnigurumaWasmLoaded(hostApi: HostApi): Promise<void> {
       wasm = await r.arrayBuffer();
     } catch {
       wasm = null;
-    }
-    if (!wasm && hostApi.getOnigurumaWasm) {
-      wasm = await hostApi.getOnigurumaWasm();
     }
     if (!wasm) return;
     await loadWASM(wasm);
@@ -106,7 +103,7 @@ export async function ensureTextMateLanguage(hostApi: HostApi, props: EditorProp
   }
 
   if (grammars.length === 0) return;
-  await ensureOnigurumaWasmLoaded(hostApi);
+  await ensureOnigurumaWasmLoaded();
 
   // Map `languageId -> scopeName` (case-insensitive match).
   const languageToScope = new Map<string, string>();

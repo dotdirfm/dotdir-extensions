@@ -46,7 +46,6 @@ export interface HostApi {
   getColorTheme?(): ColorThemeData | null;
   onThemeChange?(callback: (theme: ColorThemeData) => void): () => void;
   onClose(): void;
-  getOnigurumaWasm?(): Promise<ArrayBuffer>;
   executeCommand?<T = unknown>(command: string, args?: unknown): Promise<T>;
 }
 

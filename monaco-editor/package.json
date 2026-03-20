@@ -20,7 +20,7 @@
         "patterns": [
           "*.*"
         ],
-        "entry": "dist/editor.iife.js",
+        "entry": "dist/editor.cjs",
         "priority": 0
       }
     ],

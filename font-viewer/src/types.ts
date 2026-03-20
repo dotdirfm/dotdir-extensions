@@ -14,12 +14,10 @@ export interface HostApi {
 }
 
 declare global {
-  // eslint-disable-next-line no-var
-  var frdy: HostApi | undefined;
+  var frdy: HostApi;
 }
 
 export interface ViewerExtensionApi {
-  mount(root: HTMLElement, hostApi: HostApi, props: ViewerProps): Promise<void>;
+  mount(root: HTMLElement, props: ViewerProps): Promise<void>;
   unmount(): Promise<void>;
 }
-

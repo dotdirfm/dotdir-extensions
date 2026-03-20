@@ -5,10 +5,10 @@
  */
 
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api.js';
-import type { ColorThemeData, EditorProps, HostApi } from './types';
-import { Registry as TMRegistry, INITIAL } from 'vscode-textmate';
 import { createOnigScanner, createOnigString, loadWASM } from 'vscode-oniguruma';
 import type { StateStack } from 'vscode-textmate';
+import { INITIAL, Registry as TMRegistry } from 'vscode-textmate';
+import type { ColorThemeData, EditorProps } from './types';
 // @ts-expect-error - Vite ?url for asset URL in extension iframe
 import onigWasmUrl from 'vscode-oniguruma/release/onig.wasm?url';
 
@@ -87,7 +87,7 @@ async function ensureOnigurumaWasmLoaded(): Promise<void> {
  * Ensure TextMate tokenization is registered for a specific language id.
  * Used for initial mount and for language switching without reloading the iframe.
  */
-export async function ensureTextMateLanguage(hostApi: HostApi, props: EditorProps, targetLangId: string): Promise<void> {
+export async function ensureTextMateLanguage(props: EditorProps, targetLangId: string): Promise<void> {
   const { languages = [], grammars = [] } = props;
   if (!targetLangId) return;
   if (languages.length === 0 && grammars.length === 0) return;
@@ -139,7 +139,7 @@ export async function ensureTextMateLanguage(hostApi: HostApi, props: EditorProp
       }
 
       try {
-        const jsonText = await hostApi.readFileText(grammarPath);
+        const jsonText = await frdy.readFileText(grammarPath);
         const parsed = JSON.parse(jsonText) as object;
         grammarJsonCache.set(scopeName, parsed);
         return parsed as never;
@@ -342,13 +342,12 @@ function applyCssVarThemeToEditor(isDark: boolean): void {
   monaco.editor.setTheme('faraday-css');
 }
 
-export async function createEditorMount(root: HTMLElement, hostApi: HostApi, props: EditorProps): Promise<() => void> {
-  const api = (globalThis as unknown as { frdy?: HostApi }).frdy ?? hostApi;
+export async function createEditorMount(root: HTMLElement, props: EditorProps): Promise<() => void> {
   ensureMonacoReady();
-  await ensureTextMateLanguage(api, props, props.langId);
+  await ensureTextMateLanguage(props, props.langId);
 
   // Determine initial theme
-  const colorTheme = api.getColorTheme?.() ?? null;
+  const colorTheme = frdy.getColorTheme?.() ?? null;
   let monacoTheme: string;
   let isDark: boolean;
   let usingVsCodeTheme = false;
@@ -360,7 +359,7 @@ export async function createEditorMount(root: HTMLElement, hostApi: HostApi, pro
     isDark = colorTheme.kind !== 'light';
     usingVsCodeTheme = true;
   } else {
-    const theme = await api.getTheme();
+    const theme = await frdy.getTheme();
     isDark = theme !== 'light' && theme !== 'high-contrast-light';
     // Use Faraday CSS variables (pushed into iframe by host) for Monaco background/foreground.
     applyCssVarThemeToEditor(isDark);
@@ -368,7 +367,7 @@ export async function createEditorMount(root: HTMLElement, hostApi: HostApi, pro
     usingVsCodeTheme = false;
   }
 
-  const content = await api.readFileText(props.filePath);
+  const content = await frdy.readFileText(props.filePath);
 
   root.innerHTML = '';
   root.style.margin = '0';
@@ -404,7 +403,7 @@ export async function createEditorMount(root: HTMLElement, hostApi: HostApi, pro
   // Subscribe to live theme changes
   if (themeUnsubscribe) themeUnsubscribe();
   if (cssVarThemeObserver) { cssVarThemeObserver.disconnect(); cssVarThemeObserver = null; }
-  themeUnsubscribe = api.onThemeChange?.((newTheme) => {
+  themeUnsubscribe = frdy.onThemeChange?.((newTheme) => {
     if (newTheme.colors || (Array.isArray(newTheme.tokenColors) && newTheme.tokenColors.length > 0)) {
       usingVsCodeTheme = true;
       applyColorThemeToEditor(newTheme);
@@ -429,7 +428,7 @@ export async function createEditorMount(root: HTMLElement, hostApi: HostApi, pro
   let dirty = false;
   const save = async (): Promise<boolean> => {
     try {
-      await api.writeFile(props.filePath, editor.getValue());
+      await frdy.writeFile(props.filePath, editor.getValue());
       dirty = false;
       return true;
     } catch {
@@ -455,15 +454,15 @@ export async function createEditorMount(root: HTMLElement, hostApi: HostApi, pro
     keybindings: [monaco.KeyCode.Escape],
     run: () => {
       if (!dirty) {
-        api.onClose();
+        frdy.onClose();
         return;
       }
       if (window.confirm('Save changes before closing?')) {
         void save().then((ok) => {
-          if (ok) api.onClose();
+          if (ok) frdy.onClose();
         });
       } else {
-        api.onClose();
+        frdy.onClose();
       }
     },
   });

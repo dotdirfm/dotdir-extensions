@@ -22,11 +22,11 @@ There are no tests or linting configured.
 
 ### Extension API Contract
 
-Every extension registers itself via `window.__faradayHostReady(extensionApi)`. The extension API object must implement:
-- `mount(root: HTMLElement, hostApi: HostApi, props: ViewerProps | EditorProps): Promise<void>`
+The extension API object must implement:
+- `mount(root: HTMLElement, props: ViewerProps | EditorProps): Promise<void>`
 - `unmount(): Promise<void>`
 
-The host provides `HostApi` with methods like `readFile()`, `readFileText()`, `readFileRange()`, `getTheme()`, and `onClose()`.
+The host provides `frdy` global variable with methods like `readFile()`, `readFileText()`, `readFileRange()`, `getTheme()`, and `onClose()`.
 
 ### Extension Structure
 

@@ -8,17 +8,17 @@ export interface ViewerProps {
 export interface HostApi {
   readFile(path: string): Promise<ArrayBuffer>;
   readFileText(path: string): Promise<string>;
-  readFileRange?(path: string, offset: number, length: number): Promise<ArrayBuffer>;
-  onFileChange?(callback: () => void): () => void;
+  readFileRange(path: string, offset: number, length: number): Promise<ArrayBuffer>;
+  onFileChange(callback: () => void): () => void;
   getTheme(): Promise<string>;
   onClose(): void;
-  executeCommand?<T = unknown>(command: string, args?: unknown): Promise<T>;
+  executeCommand<T = unknown>(command: string, args?: unknown): Promise<T>;
 
   /**
    * Commands + keybindings API exposed via `window.frdy.commands.*`.
    * This mimics VS Code's command/keybinding model.
    */
-  commands?: {
+  commands: {
     registerCommand: (
       commandId: string,
       handler: (...args: unknown[]) => void | Promise<void>,
@@ -31,11 +31,10 @@ export interface HostApi {
 }
 
 declare global {
-  // eslint-disable-next-line no-var
-  var frdy: HostApi | undefined;
+  var frdy: HostApi;
 }
 
 export interface ViewerExtensionApi {
-  mount(root: HTMLElement, hostApi: HostApi, props: ViewerProps): Promise<void>;
+  mount(root: HTMLElement, props: ViewerProps): Promise<void>;
   unmount(): Promise<void>;
 }

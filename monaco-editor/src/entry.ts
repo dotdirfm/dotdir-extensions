@@ -1,22 +1,19 @@
 /**
  * Faraday Monaco Editor extension — entry point.
- * Registers with the host via __faradayHostReady and renders into the provided root.
  */
 
-import type { EditorExtensionApi, EditorProps, HostApi } from './types';
 import { createEditorMount, disposeEditor, ensureTextMateLanguage, setEditorLanguage } from './editor';
+import type { EditorExtensionApi, EditorProps } from './types';
 
 function createExtensionApi(): EditorExtensionApi {
   let mounted = false;
   let unmountFn: (() => void) | null = null;
   let lastFilePath: string | null = null;
-  let latestHostApi: HostApi | null = null;
   let latestProps: EditorProps | null = null;
   let lastLangId: string | null = null;
 
   return {
-    async mount(root: HTMLElement, hostApi: HostApi, props: EditorProps): Promise<void> {
-      latestHostApi = hostApi;
+    async mount(root: HTMLElement, props: EditorProps): Promise<void> {
       latestProps = props;
 
       // If we're already mounted with the same file, nothing to do.
@@ -30,7 +27,7 @@ function createExtensionApi(): EditorExtensionApi {
         mounted = false;
       }
 
-      unmountFn = await createEditorMount(root, hostApi, props);
+      unmountFn = await createEditorMount(root, props);
       mounted = true;
       lastFilePath = props.filePath;
       lastLangId = props.langId;
@@ -51,8 +48,8 @@ function createExtensionApi(): EditorExtensionApi {
       // Language tokenization is async (grammar + onig load); do it in background,
       // then switch the Monaco model language when ready.
       void (async () => {
-        if (latestHostApi && latestProps) {
-          await ensureTextMateLanguage(latestHostApi, latestProps, langId);
+        if (latestProps) {
+          await ensureTextMateLanguage(latestProps, langId);
         }
         setEditorLanguage(langId);
         lastLangId = langId;
@@ -65,7 +62,4 @@ function createExtensionApi(): EditorExtensionApi {
   };
 }
 
-const api = createExtensionApi();
-if (typeof window !== 'undefined' && (window as Window & { __faradayHostReady?: (api: EditorExtensionApi) => void }).__faradayHostReady) {
-  (window as Window & { __faradayHostReady: (api: EditorExtensionApi) => void }).__faradayHostReady(api);
-}
+export default createExtensionApi();

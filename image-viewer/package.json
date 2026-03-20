@@ -36,7 +36,7 @@
           "*.mov",
           "*.m4v"
         ],
-        "entry": "dist/viewer.iife.js",
+        "entry": "dist/viewer.cjs",
         "priority": 10
       }
     ],

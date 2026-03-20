@@ -6,9 +6,8 @@ export default defineConfig({
     emptyOutDir: true,
     lib: {
       entry: 'src/entry.ts',
-      name: 'FaradayPdfViewer',
       fileName: 'viewer',
-      formats: ['iife'],
+      formats: ['cjs'],
     },
     minify: 'esbuild',
     sourcemap: false,

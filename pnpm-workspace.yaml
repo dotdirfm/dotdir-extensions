@@ -1,8 +1,11 @@
 packages:
-  - "monaco-editor"
-  - "image-viewer"
-  - "file-viewer"
-  - "csv-viewer"
-  - "pdf-viewer"
-  - "font-viewer"
-  - "sqlite-editor"
+  - monaco-editor
+  - image-viewer
+  - file-viewer
+  - csv-viewer
+  - pdf-viewer
+  - font-viewer
+  - sqlite-editor
+
+onlyBuiltDependencies:
+  - esbuild

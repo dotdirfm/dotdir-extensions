@@ -15,9 +15,8 @@ export default defineConfig({
     assetsInlineLimit: 10_000_000,
     lib: {
       entry: 'src/entry.ts',
-      name: 'FaradaySqliteEditor',
       fileName: 'editor',
-      formats: ['iife'],
+      formats: ['cjs'],
     },
     minify: 'esbuild',
     sourcemap: false,

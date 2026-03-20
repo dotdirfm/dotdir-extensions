@@ -25,7 +25,7 @@
           "*.ttc",
           "*.otc"
         ],
-        "entry": "dist/viewer.iife.js",
+        "entry": "dist/viewer.cjs",
         "priority": 20
       }
     ]

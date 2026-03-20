@@ -20,7 +20,7 @@
         "patterns": [
           "*.pdf"
         ],
-        "entry": "dist/viewer.iife.js",
+        "entry": "dist/viewer.cjs",
         "priority": 10
       }
     ]

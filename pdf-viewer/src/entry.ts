@@ -1,12 +1,12 @@
-import type { ViewerExtensionApi, ViewerProps, HostApi } from './types';
+import type { ViewerExtensionApi, ViewerProps } from './types';
 import { mountViewer, unmountViewer } from './viewer';
 
 function createExtensionApi(): ViewerExtensionApi {
   let mounted = false;
   return {
-    async mount(root: HTMLElement, hostApi: HostApi, props: ViewerProps): Promise<void> {
+    async mount(root: HTMLElement, props: ViewerProps): Promise<void> {
       if (mounted) unmountViewer();
-      await mountViewer(root, hostApi, props);
+      await mountViewer(root, props);
       mounted = true;
     },
     async unmount(): Promise<void> {
@@ -17,7 +17,4 @@ function createExtensionApi(): ViewerExtensionApi {
   };
 }
 
-const api = createExtensionApi();
-if (typeof window !== 'undefined' && (window as Window & { __faradayHostReady?: (api: ViewerExtensionApi) => void }).__faradayHostReady) {
-  (window as Window & { __faradayHostReady: (api: ViewerExtensionApi) => void }).__faradayHostReady(api);
-}
+export default createExtensionApi();

@@ -23,7 +23,7 @@
           "*.db",
           "*.db3"
         ],
-        "entry": "dist/editor.iife.js",
+        "entry": "dist/editor.cjs",
         "priority": 50
       }
     ]
@@ -36,6 +36,7 @@
   "devDependencies": {
     "@types/react": "^19.1.12",
     "@types/react-dom": "^19.1.9",
+    "@types/sql.js": "^1.4.10",
     "@vitejs/plugin-react": "^5.0.2",
     "esbuild": "^0.27.0",
     "typescript": "~5.9.3",

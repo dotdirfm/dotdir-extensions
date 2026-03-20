@@ -1,4 +1,4 @@
-import type { ViewerProps, HostApi } from './types';
+import type { ViewerProps } from "./types";
 
 /**
  * Parse a single line of CSV, handling quoted fields.
@@ -9,7 +9,7 @@ function parseCsvLine(line: string): string[] {
   let i = 0;
   while (i < line.length) {
     if (line[i] === '"') {
-      let field = '';
+      let field = "";
       i++;
       while (i < line.length) {
         if (line[i] === '"') {
@@ -26,9 +26,9 @@ function parseCsvLine(line: string): string[] {
         }
       }
       result.push(field);
-      if (line[i] === ',') i++;
+      if (line[i] === ",") i++;
     } else {
-      const end = line.indexOf(',', i);
+      const end = line.indexOf(",", i);
       if (end === -1) {
         result.push(line.slice(i).trim());
         break;
@@ -49,54 +49,58 @@ function parseCsv(text: string): string[][] {
 let rootEl: HTMLElement | null = null;
 let keydownHandler: ((e: KeyboardEvent) => void) | null = null;
 
-export async function mountViewer(root: HTMLElement, hostApi: HostApi, props: ViewerProps): Promise<void> {
-  const api = (globalThis as unknown as { frdy?: HostApi }).frdy ?? hostApi;
+export async function mountViewer(
+  root: HTMLElement,
+  props: ViewerProps,
+): Promise<void> {
   if (keydownHandler) {
-    document.removeEventListener('keydown', keydownHandler);
+    document.removeEventListener("keydown", keydownHandler);
     keydownHandler = null;
   }
 
-  root.innerHTML = '';
-  root.style.margin = '0';
-  root.style.padding = '0';
-  root.style.width = '100%';
-  root.style.height = '100%';
-  root.style.display = 'flex';
-  root.style.flexDirection = 'column';
-  root.style.overflow = 'hidden';
+  root.innerHTML = "";
+  root.style.margin = "0";
+  root.style.padding = "0";
+  root.style.width = "100%";
+  root.style.height = "100%";
+  root.style.display = "flex";
+  root.style.flexDirection = "column";
+  root.style.overflow = "hidden";
   if (props.inline) {
     root.tabIndex = -1;
   }
 
-  const text = await api.readFileText(props.filePath);
+  const text = await frdy.readFileText(props.filePath);
   const rows = parseCsv(text);
 
-  const scrollWrap = document.createElement('div');
-  scrollWrap.style.cssText = 'flex:1;min-height:0;overflow:auto;padding:8px;';
+  const scrollWrap = document.createElement("div");
+  scrollWrap.style.cssText = "flex:1;min-height:0;overflow:auto;padding:8px;";
   rootEl = scrollWrap;
   root.appendChild(scrollWrap);
 
-  const table = document.createElement('table');
-  table.style.cssText = 'border-collapse:collapse;font-family:monospace;font-size:13px;width:max-content;';
-  table.setAttribute('role', 'grid');
+  const table = document.createElement("table");
+  table.style.cssText =
+    "border-collapse:collapse;font-family:monospace;font-size:13px;width:max-content;";
+  table.setAttribute("role", "grid");
 
-  const thead = document.createElement('thead');
-  const tbody = document.createElement('tbody');
+  const thead = document.createElement("thead");
+  const tbody = document.createElement("tbody");
   const firstRow = rows[0] ?? [];
   const colCount = Math.max(...rows.map((r) => r.length), 1);
 
   const addCell = (tr: HTMLTableRowElement, text: string, isHead: boolean) => {
-    const cell = document.createElement(isHead ? 'th' : 'td');
+    const cell = document.createElement(isHead ? "th" : "td");
     cell.textContent = text;
-    cell.style.cssText = 'border:1px solid var(--border,#444);padding:4px 8px;text-align:left;white-space:nowrap;';
+    cell.style.cssText =
+      "border:1px solid var(--border,#444);padding:4px 8px;text-align:left;white-space:nowrap;";
     if (isHead) {
-      cell.style.background = 'var(--bg-secondary,#2a2a2a)';
-      cell.style.fontWeight = '600';
+      cell.style.background = "var(--bg-secondary,#2a2a2a)";
+      cell.style.fontWeight = "600";
     }
     tr.appendChild(cell);
   };
 
-  const headerTr = document.createElement('tr');
+  const headerTr = document.createElement("tr");
   for (let c = 0; c < colCount; c++) {
     addCell(headerTr, firstRow[c] ?? `Column ${c + 1}`, true);
   }
@@ -105,9 +109,9 @@ export async function mountViewer(root: HTMLElement, hostApi: HostApi, props: Vi
 
   const dataRows = rows.slice(1);
   for (const row of dataRows) {
-    const tr = document.createElement('tr');
+    const tr = document.createElement("tr");
     for (let c = 0; c < colCount; c++) {
-      addCell(tr, row[c] ?? '', false);
+      addCell(tr, row[c] ?? "", false);
     }
     tbody.appendChild(tr);
   }
@@ -115,14 +119,14 @@ export async function mountViewer(root: HTMLElement, hostApi: HostApi, props: Vi
   scrollWrap.appendChild(table);
 
   keydownHandler = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') api.onClose();
+    if (e.key === "Escape") frdy.onClose();
   };
-  document.addEventListener('keydown', keydownHandler);
+  document.addEventListener("keydown", keydownHandler);
 }
 
 export function unmountViewer(): void {
   if (keydownHandler) {
-    document.removeEventListener('keydown', keydownHandler);
+    document.removeEventListener("keydown", keydownHandler);
     keydownHandler = null;
   }
   if (rootEl?.parentNode) {

@@ -13,7 +13,7 @@
         "scriptPath": "scripts/bash.sh",
         "executableCandidates": ["/bin/bash", "/usr/bin/bash", "/opt/homebrew/bin/bash"],
         "platforms": ["darwin", "linux", "unix"],
-        "hiddenCdTemplate": "cd {{cwd}}",
+        "hiddenCdTemplate": " _frd_cd {{cwd}}",
         "cwdEscape": "posix",
         "lineEnding": "\n"
       },
@@ -23,7 +23,7 @@
         "scriptPath": "scripts/zsh.zsh",
         "executableCandidates": ["/bin/zsh", "/usr/bin/zsh", "/opt/homebrew/bin/zsh"],
         "platforms": ["darwin", "linux", "unix"],
-        "hiddenCdTemplate": "cd {{cwd}}",
+        "hiddenCdTemplate": " _frd_cd {{cwd}}",
         "cwdEscape": "posix",
         "lineEnding": "\n"
       },
@@ -33,7 +33,7 @@
         "scriptPath": "scripts/fish.fish",
         "executableCandidates": ["/usr/local/bin/fish", "/opt/homebrew/bin/fish", "/usr/bin/fish"],
         "platforms": ["darwin", "linux", "unix"],
-        "hiddenCdTemplate": "cd {{cwd}}",
+        "hiddenCdTemplate": "_frd_cd {{cwd}}",
         "cwdEscape": "posix",
         "lineEnding": "\n"
       },
@@ -48,8 +48,9 @@
           "$ProgramFiles/PowerShell/7/pwsh.exe"
         ],
         "platforms": ["windows", "darwin", "linux", "unix"],
-        "spawnArgs": ["-NoLogo"],
-        "hiddenCdTemplate": "Set-Location -LiteralPath {{cwd}}",
+        "spawnArgs": ["-NoLogo", "-NoExit", "-Command"],
+        "scriptArg": true,
+        "hiddenCdTemplate": "_frd_cd {{cwd}}",
         "cwdEscape": "powershell",
         "lineEnding": "\r\n"
       },
@@ -62,8 +63,9 @@
           "powershell"
         ],
         "platforms": ["windows"],
-        "spawnArgs": ["-NoLogo", "-NoProfile"],
-        "hiddenCdTemplate": "Set-Location -LiteralPath {{cwd}}",
+        "spawnArgs": ["-NoLogo", "-NoProfile", "-NoExit", "-Command"],
+        "scriptArg": true,
+        "hiddenCdTemplate": "_frd_cd {{cwd}}",
         "cwdEscape": "powershell",
         "lineEnding": "\r\n"
       }

@@ -1,3 +1,7 @@
+function _frd_cd($p) {
+  Set-Location -LiteralPath $p
+  Write-Host -NoNewLine "$([char]27)[1A$([char]27)[2K`r"
+}
 function prompt {
   $e=[char]27;
   $s=$e+'\';

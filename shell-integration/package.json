@@ -1,0 +1,72 @@
+{
+  "name": "shell-integration",
+  "version": "0.1.0",
+  "publisher": "faraday",
+  "displayName": "Faraday shell integration",
+  "description": "OSC 7 cwd sync and Faraday OSC 779 (command finished) for integrated terminals.",
+  "files": ["scripts"],
+  "contributes": {
+    "shellIntegrations": [
+      {
+        "shell": "bash",
+        "label": "bash",
+        "scriptPath": "scripts/bash.sh",
+        "executableCandidates": ["/bin/bash", "/usr/bin/bash", "/opt/homebrew/bin/bash"],
+        "platforms": ["darwin", "linux", "unix"],
+        "hiddenCdTemplate": "cd {{cwd}}",
+        "cwdEscape": "posix",
+        "lineEnding": "\n"
+      },
+      {
+        "shell": "zsh",
+        "label": "zsh",
+        "scriptPath": "scripts/zsh.zsh",
+        "executableCandidates": ["/bin/zsh", "/usr/bin/zsh", "/opt/homebrew/bin/zsh"],
+        "platforms": ["darwin", "linux", "unix"],
+        "hiddenCdTemplate": "cd {{cwd}}",
+        "cwdEscape": "posix",
+        "lineEnding": "\n"
+      },
+      {
+        "shell": "fish",
+        "label": "fish",
+        "scriptPath": "scripts/fish.fish",
+        "executableCandidates": ["/usr/local/bin/fish", "/opt/homebrew/bin/fish", "/usr/bin/fish"],
+        "platforms": ["darwin", "linux", "unix"],
+        "hiddenCdTemplate": "cd {{cwd}}",
+        "cwdEscape": "posix",
+        "lineEnding": "\n"
+      },
+      {
+        "shell": "pwsh",
+        "label": "PowerShell",
+        "scriptPath": "scripts/pwsh.ps1",
+        "executableCandidates": [
+          "pwsh",
+          "/usr/local/bin/pwsh",
+          "/opt/homebrew/bin/pwsh",
+          "$ProgramFiles/PowerShell/7/pwsh.exe"
+        ],
+        "platforms": ["windows", "darwin", "linux", "unix"],
+        "spawnArgs": ["-NoLogo"],
+        "hiddenCdTemplate": "Set-Location -LiteralPath {{cwd}}",
+        "cwdEscape": "powershell",
+        "lineEnding": "\r\n"
+      },
+      {
+        "shell": "powershell",
+        "label": "Windows PowerShell",
+        "scriptPath": "scripts/pwsh.ps1",
+        "executableCandidates": [
+          "C:\\\\Windows\\\\System32\\\\WindowsPowerShell\\\\v1.0\\\\powershell.exe",
+          "powershell"
+        ],
+        "platforms": ["windows"],
+        "spawnArgs": ["-NoLogo", "-NoProfile"],
+        "hiddenCdTemplate": "Set-Location -LiteralPath {{cwd}}",
+        "cwdEscape": "powershell",
+        "lineEnding": "\r\n"
+      }
+    ]
+  }
+}

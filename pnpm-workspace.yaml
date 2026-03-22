@@ -6,6 +6,8 @@ packages:
   - pdf-viewer
   - font-viewer
   - sqlite-editor
+  - zip-provider
+  - iso-provider
 
 onlyBuiltDependencies:
   - esbuild

@@ -13,7 +13,7 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
 
-const PACKAGES = ['monaco-editor', 'image-viewer', 'file-viewer', 'csv-viewer', 'pdf-viewer', 'font-viewer', 'sqlite-editor'];
+const PACKAGES = ['monaco-editor', 'image-viewer', 'file-viewer', 'csv-viewer', 'pdf-viewer', 'font-viewer', 'sqlite-editor', 'zip-provider', 'iso-provider'];
 const OUT_DIR = path.join(rootDir, 'packed');
 
 function ensureDir(dir) {

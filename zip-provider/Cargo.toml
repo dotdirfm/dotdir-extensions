@@ -1,0 +1,20 @@
+[package]
+name = "zip-provider"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+# Pure-Rust deflate backend (no system libs; compiles to wasm32-unknown-unknown)
+zip = { version = "0.6", default-features = false, features = ["deflate"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[profile.release]
+# Optimise for size; WASM binary goes on disk and loads into wasmtime
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"

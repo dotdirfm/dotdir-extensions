@@ -21,7 +21,7 @@ export interface HostApi {
 }
 
 declare global {
-  var frdy: HostApi;
+  var dotdir: HostApi;
 }
 
 export interface ViewerExtensionApi {

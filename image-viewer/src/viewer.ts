@@ -126,7 +126,7 @@ export async function mountViewer(
         streamDestroy();
         streamDestroy = null;
       }
-      const buf = await frdy.readFile(props.filePath);
+      const buf = await dotdir.readFile(props.filePath);
       const blob = new Blob([buf], { type: mime });
       if (objectUrl) URL.revokeObjectURL(objectUrl);
       objectUrl = URL.createObjectURL(blob);
@@ -153,7 +153,7 @@ export async function mountViewer(
         streamDestroy = streamVideo(
           video,
           (offset, length) =>
-            frdy.readFileRange(props.filePath, offset, length),
+            dotdir.readFileRange(props.filePath, offset, length),
           props.fileSize,
         );
       } catch {
@@ -167,7 +167,7 @@ export async function mountViewer(
     wrap.style.cssText =
       "flex:1;min-height:0;min-width:0;width:100%;display:flex;align-items:center;justify-content:center;overflow:auto;background:#1a1a1a;position:relative;";
 
-    const buf = await frdy.readFile(props.filePath);
+    const buf = await dotdir.readFile(props.filePath);
     const blob = new Blob([buf], { type: mime });
     objectUrl = URL.createObjectURL(blob);
 
@@ -183,23 +183,23 @@ export async function mountViewer(
   // Navigation overlay (arrows + counter)
   navHandle = createNavOverlay(wrap);
 
-  // Arrow key navigation via Faraday command system (no document-level key listeners).
+  // Arrow key navigation via .dir command system (no document-level key listeners).
   const prevCommandId = "imageViewer.navigatePrev";
   const nextCommandId = "imageViewer.navigateNext";
 
-  disposeNavPrevCommand = frdy.commands.registerCommand(
+  disposeNavPrevCommand = dotdir.commands.registerCommand(
     prevCommandId,
     async () => {
-      await frdy.executeCommand("navigatePrev", {
+      await dotdir.executeCommand("navigatePrev", {
         patterns: MEDIA_PATTERNS,
       });
     },
     { title: "Image Viewer: Previous", when: "focusViewer" },
   );
-  disposeNavNextCommand = frdy.commands.registerCommand(
+  disposeNavNextCommand = dotdir.commands.registerCommand(
     nextCommandId,
     async () => {
-      await frdy.executeCommand("navigateNext", {
+      await dotdir.executeCommand("navigateNext", {
         patterns: MEDIA_PATTERNS,
       });
     },
@@ -207,7 +207,7 @@ export async function mountViewer(
   );
 
   // Re-subscribe to external file changes for this image/video.
-  disposeFileChange = frdy.onFileChange(async () => {
+  disposeFileChange = dotdir.onFileChange(async () => {
     try {
       await mountViewer(root, props);
     } catch {
@@ -216,7 +216,7 @@ export async function mountViewer(
   });
 
   keydownHandler = (e: KeyboardEvent) => {
-    if (e.key === "Escape") frdy.onClose();
+    if (e.key === "Escape") dotdir.onClose();
     if (e.key === " " && isVideo) {
       e.preventDefault();
       const v = wrap.querySelector("video");

@@ -1,9 +1,9 @@
 {
   "name": "font-viewer",
   "version": "1.0.2",
-  "publisher": "faraday",
+  "publisher": "dotdir",
   "displayName": "Font Viewer",
-  "description": "Preview font files in Faraday",
+  "description": "Preview font files for .dir",
   "type": "module",
   "files": [
     "dist"

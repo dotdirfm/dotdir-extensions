@@ -1,5 +1,5 @@
 /**
- * Monaco editor UI for the Faraday extension.
+ * Monaco editor UI for the .dir extension.
  * Creates the editor in the iframe body and wires save/close to the host API.
  * Supports custom TextMate grammars passed from the host (from all loaded extensions).
  */
@@ -139,7 +139,7 @@ export async function ensureTextMateLanguage(props: EditorProps, targetLangId: s
       }
 
       try {
-        const jsonText = await frdy.readFileText(grammarPath);
+        const jsonText = await dotdir.readFileText(grammarPath);
         const parsed = JSON.parse(jsonText) as object;
         grammarJsonCache.set(scopeName, parsed);
         return parsed as never;
@@ -193,13 +193,13 @@ function ensureMonacoReady(): void {
     { token: 'entity.name.function', foreground: 'DCDCAA' },
     { token: 'variable', foreground: '9CDCFE' },
   ];
-  monaco.editor.defineTheme('faraday-dark', {
+  monaco.editor.defineTheme('dotdir-dark', {
     base: 'vs-dark',
     inherit: true,
     rules: commonRules,
     colors: { 'editor.background': '#1e1e1e', 'editor.foreground': '#d4d4d4' },
   });
-  monaco.editor.defineTheme('faraday-light', {
+  monaco.editor.defineTheme('dotdir-light', {
     base: 'vs',
     inherit: true,
     rules: [
@@ -319,10 +319,10 @@ let cssVarThemeObserver: MutationObserver | null = null;
 
 function applyColorThemeToEditor(themeData: ColorThemeData): void {
   const { base, rules, colors } = buildMonacoTheme(themeData);
-  monaco.editor.defineTheme('faraday-custom', { base, inherit: true, rules, colors });
-  monaco.editor.setTheme('faraday-custom');
+  monaco.editor.defineTheme('dotdir-custom', { base, inherit: true, rules, colors });
+  monaco.editor.setTheme('dotdir-custom');
   if (rootEl?.parentElement) {
-    rootEl.parentElement.className = themeData.kind === 'light' ? 'faraday-light' : 'faraday-dark';
+    rootEl.parentElement.className = themeData.kind === 'light' ? 'dotdir-light' : 'dotdir-dark';
   }
 }
 
@@ -330,7 +330,7 @@ function applyCssVarThemeToEditor(isDark: boolean): void {
   const cs = getComputedStyle(document.documentElement);
   const bg = normalizeColor(cs.getPropertyValue('--bg')) ?? (isDark ? '#1e1e1e' : '#ffffff');
   const fg = normalizeColor(cs.getPropertyValue('--fg')) ?? (isDark ? '#d4d4d4' : '#1e1e1e');
-  monaco.editor.defineTheme('faraday-css', {
+  monaco.editor.defineTheme('dotdir-css', {
     base: isDark ? 'vs-dark' : 'vs',
     inherit: true,
     rules: [],
@@ -339,7 +339,7 @@ function applyCssVarThemeToEditor(isDark: boolean): void {
       'editor.foreground': fg,
     },
   });
-  monaco.editor.setTheme('faraday-css');
+  monaco.editor.setTheme('dotdir-css');
 }
 
 export async function createEditorMount(root: HTMLElement, props: EditorProps): Promise<() => void> {
@@ -347,27 +347,27 @@ export async function createEditorMount(root: HTMLElement, props: EditorProps): 
   await ensureTextMateLanguage(props, props.langId);
 
   // Determine initial theme
-  const colorTheme = frdy.getColorTheme?.() ?? null;
+  const colorTheme = dotdir.getColorTheme?.() ?? null;
   let monacoTheme: string;
   let isDark: boolean;
   let usingVsCodeTheme = false;
 
   if (colorTheme && (colorTheme.colors || (Array.isArray(colorTheme.tokenColors) && colorTheme.tokenColors.length > 0))) {
     const { base, rules, colors } = buildMonacoTheme(colorTheme);
-    monaco.editor.defineTheme('faraday-custom', { base, inherit: true, rules, colors });
-    monacoTheme = 'faraday-custom';
+    monaco.editor.defineTheme('dotdir-custom', { base, inherit: true, rules, colors });
+    monacoTheme = 'dotdir-custom';
     isDark = colorTheme.kind !== 'light';
     usingVsCodeTheme = true;
   } else {
-    const theme = await frdy.getTheme();
+    const theme = await dotdir.getTheme();
     isDark = theme !== 'light' && theme !== 'high-contrast-light';
-    // Use Faraday CSS variables (pushed into iframe by host) for Monaco background/foreground.
+    // Use .dir CSS variables (pushed into iframe by host) for Monaco background/foreground.
     applyCssVarThemeToEditor(isDark);
-    monacoTheme = 'faraday-css';
+    monacoTheme = 'dotdir-css';
     usingVsCodeTheme = false;
   }
 
-  const content = await frdy.readFileText(props.filePath);
+  const content = await dotdir.readFileText(props.filePath);
 
   root.innerHTML = '';
   root.style.margin = '0';
@@ -376,7 +376,7 @@ export async function createEditorMount(root: HTMLElement, props: EditorProps): 
   root.style.overflow = 'hidden';
   root.style.display = 'flex';
   root.style.flexDirection = 'column';
-  root.className = isDark ? 'faraday-dark' : 'faraday-light';
+  root.className = isDark ? 'dotdir-dark' : 'dotdir-light';
 
   const editorHost = document.createElement('div');
   editorHost.style.cssText = 'flex:1;min-height:0;width:100%;overflow:hidden;';
@@ -403,22 +403,22 @@ export async function createEditorMount(root: HTMLElement, props: EditorProps): 
   // Subscribe to live theme changes
   if (themeUnsubscribe) themeUnsubscribe();
   if (cssVarThemeObserver) { cssVarThemeObserver.disconnect(); cssVarThemeObserver = null; }
-  themeUnsubscribe = frdy.onThemeChange?.((newTheme) => {
+  themeUnsubscribe = dotdir.onThemeChange?.((newTheme) => {
     if (newTheme.colors || (Array.isArray(newTheme.tokenColors) && newTheme.tokenColors.length > 0)) {
       usingVsCodeTheme = true;
       applyColorThemeToEditor(newTheme);
     } else {
-      // Faraday theme (CSS vars)
+      // .dir theme (CSS vars)
       usingVsCodeTheme = false;
       const nextIsDark = newTheme.kind !== 'light';
       isDark = nextIsDark;
       applyCssVarThemeToEditor(nextIsDark);
-      root.className = newTheme.kind === 'light' ? 'faraday-light' : 'faraday-dark';
+      root.className = newTheme.kind === 'light' ? 'dotdir-light' : 'dotdir-dark';
     }
   }) ?? null;
 
   // Also track direct CSS variable pushes (host → iframe) which don't go through onThemeChange.
-  // Host updates `documentElement.style` when Faraday theme changes.
+  // Host updates `documentElement.style` when .dir theme changes.
   cssVarThemeObserver = new MutationObserver(() => {
     if (usingVsCodeTheme) return;
     applyCssVarThemeToEditor(isDark);
@@ -428,7 +428,7 @@ export async function createEditorMount(root: HTMLElement, props: EditorProps): 
   let dirty = false;
   const save = async (): Promise<boolean> => {
     try {
-      await frdy.writeFile(props.filePath, editor.getValue());
+      await dotdir.writeFile(props.filePath, editor.getValue());
       dirty = false;
       return true;
     } catch {
@@ -441,7 +441,7 @@ export async function createEditorMount(root: HTMLElement, props: EditorProps): 
   });
 
   editor.addAction({
-    id: 'faraday.save',
+    id: 'dotdir.save',
     label: 'Save File',
     keybindings: [monaco.KeyCode.F2],
     run: () => {
@@ -449,20 +449,20 @@ export async function createEditorMount(root: HTMLElement, props: EditorProps): 
     },
   });
   editor.addAction({
-    id: 'faraday.close',
+    id: 'dotdir.close',
     label: 'Close Editor',
     keybindings: [monaco.KeyCode.Escape],
     run: () => {
       if (!dirty) {
-        frdy.onClose();
+        dotdir.onClose();
         return;
       }
       if (window.confirm('Save changes before closing?')) {
         void save().then((ok) => {
-          if (ok) frdy.onClose();
+          if (ok) dotdir.onClose();
         });
       } else {
-        frdy.onClose();
+        dotdir.onClose();
       }
     },
   });

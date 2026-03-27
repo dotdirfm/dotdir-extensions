@@ -1,5 +1,5 @@
 /**
- * Faraday Monaco Editor extension — entry point.
+ * .dir Monaco Editor extension — entry point.
  */
 
 import { createEditorMount, disposeEditor, ensureTextMateLanguage, setEditorLanguage } from './editor';

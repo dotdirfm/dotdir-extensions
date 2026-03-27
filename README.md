@@ -1,17 +1,17 @@
-# Faraday extensions
+# .dir extensions
 
-Built-in and third-party extensions for the Faraday file manager. The main app (faraday-tauri) bundles the contents of this folder as the `extensions` resource.
+Built-in and third-party extensions for .dir. The main app (dotdir) bundles the contents of this folder as the `extensions` resource.
 
 ## Built-in extensions
 
-### faraday-monaco-editor
+### dotdir-monaco-editor
 
 Monaco-based code editor with syntax highlighting. Contributes an editor for all file types (`*.*`) and language metadata for detection.
 
 **Build:** From the `extensions` folder run `pnpm install && pnpm build`, or from the extension folder:
 
 ```bash
-cd faraday-monaco-editor
+cd dotdir-monaco-editor
 pnpm install
 pnpm build
 ```
@@ -24,7 +24,7 @@ Output: `dist/editor.iife.js` (and `dist/editor.css`). The host loads `dist/edit
 
 When building the Tauri app, ensure this folder is built first so each extension has its `dist/` (or equivalent) output. The app’s `tauri.conf.json` maps `../extensions` → `extensions`, so the repo layout should be:
 
-- `faraday-fm/extensions/faraday-monaco-editor/` (this repo)
-- `faraday-fm/faraday-tauri/` (main app)
+- `dotdir-fm/extensions/dotdir-monaco-editor/` (this repo)
+- `dotdir-fm/dotdir/` (main app)
 
-Build order: build extensions, then run `pnpm tauri build` (or `pnpm build` then `tauri build`) from faraday-tauri.
+Build order: build extensions, then run `pnpm tauri build` (or `pnpm build` then `tauri build`) from dotdir.

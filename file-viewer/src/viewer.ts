@@ -91,7 +91,7 @@ function clamp(n: number) {
 
 // ── Data source ────────────────────────────────────────────────────────────────
 async function readRange(off: number, len: number): Promise<Uint8Array> {
-  return new Uint8Array(await frdy.readFileRange(_path, off, len));
+  return new Uint8Array(await dotdir.readFileRange(_path, off, len));
 }
 
 async function loadBlock(idx: number) {
@@ -465,7 +465,7 @@ export async function mountViewer(
   _path = props.filePath;
   fileSize = props.fileSize;
   try {
-    const stat = await frdy.statFile(_path);
+    const stat = await dotdir.statFile(_path);
     fileSize = stat.size;
   } catch {
     // fall back to props.fileSize
@@ -499,11 +499,11 @@ export async function mountViewer(
     disposeFileChange();
     disposeFileChange = null;
   }
-  disposeFileChange = frdy.onFileChange(async () => {
+  disposeFileChange = dotdir.onFileChange(async () => {
     // Reset cache and redisplay when file changes on disk
-    if (frdy.statFile) {
+    if (dotdir.statFile) {
       try {
-        const stat = await frdy.statFile(_path);
+        const stat = await dotdir.statFile(_path);
         fileSize = stat.size;
       } catch {
         // ignore stat errors, keep old size
@@ -1038,7 +1038,7 @@ export async function mountViewer(
 
     switch (e.key) {
       case "Escape":
-        frdy.onClose();
+        dotdir.onClose();
         return;
       case "ArrowDown":
         e.preventDefault();

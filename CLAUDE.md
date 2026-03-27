@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-A monorepo of built-in extensions for the Faraday file manager (a Tauri app). Each extension is a self-contained IIFE bundle that runs in an iframe, communicating with the host app via a standardized API. The sibling repo `faraday-tauri` bundles this folder as a resource.
+A monorepo of built-in extensions for the .dir file manager (a Tauri app). Each extension is a self-contained IIFE bundle that runs in an iframe, communicating with the host app via a standardized API. The sibling repo `dotdir` bundles this folder as a resource.
 
 ## Commands
 
@@ -26,7 +26,7 @@ The extension API object must implement:
 - `mount(root: HTMLElement, props: ViewerProps | EditorProps): Promise<void>`
 - `unmount(): Promise<void>`
 
-The host provides `frdy` global variable with methods like `readFile()`, `readFileText()`, `readFileRange()`, `getTheme()`, and `onClose()`.
+The host provides `dotdir` global variable with methods like `readFile()`, `readFileText()`, `readFileRange()`, `getTheme()`, and `onClose()`.
 
 ### Extension Structure
 

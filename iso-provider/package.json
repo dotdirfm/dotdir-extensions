@@ -1,9 +1,9 @@
 {
   "name": "iso-provider",
   "version": "0.1.0",
-  "publisher": "faraday",
+  "publisher": "dotdir",
   "displayName": "ISO Provider",
-  "description": "Browse ISO 9660 disc image contents in Faraday",
+  "description": "Browse ISO 9660 disc image contents for .dir",
   "scripts": {
     "build": "cargo build --target wasm32-unknown-unknown --release && mkdir -p dist && cp target/wasm32-unknown-unknown/release/iso_provider.wasm dist/provider.wasm",
     "dev": "cargo build --target wasm32-unknown-unknown && mkdir -p dist && cp target/wasm32-unknown-unknown/debug/iso_provider.wasm dist/provider.wasm"

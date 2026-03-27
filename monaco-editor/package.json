@@ -1,9 +1,9 @@
 {
   "name": "monaco-editor",
   "version": "1.0.5",
-  "publisher": "faraday",
+  "publisher": "dotdir",
   "displayName": "Monaco Editor",
-  "description": "Monaco-based code editor for Faraday with syntax highlighting",
+  "description": "Monaco-based code editor for .dir with syntax highlighting",
   "type": "module",
   "files": [
     "dist"

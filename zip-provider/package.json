@@ -1,9 +1,9 @@
 {
   "name": "zip-provider",
   "version": "0.1.0",
-  "publisher": "faraday",
+  "publisher": "dotdir",
   "displayName": "ZIP Provider",
-  "description": "Browse ZIP archive contents in Faraday",
+  "description": "Browse ZIP archive contents for .dir",
   "scripts": {
     "build": "cargo build --target wasm32-unknown-unknown --release && mkdir -p dist && cp target/wasm32-unknown-unknown/release/zip_provider.wasm dist/provider.wasm",
     "dev": "cargo build --target wasm32-unknown-unknown && mkdir -p dist && cp target/wasm32-unknown-unknown/debug/zip_provider.wasm dist/provider.wasm"

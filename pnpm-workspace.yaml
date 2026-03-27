@@ -8,6 +8,7 @@ packages:
   - sqlite-editor
   - zip-provider
   - iso-provider
+  - dsstore-viewer
 
 onlyBuiltDependencies:
   - esbuild

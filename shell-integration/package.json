@@ -1,9 +1,9 @@
 {
   "name": "shell-integration",
   "version": "0.1.0",
-  "publisher": "faraday",
-  "displayName": "Faraday shell integration",
-  "description": "OSC 7 cwd sync and Faraday OSC 779 (command finished) for integrated terminals.",
+  "publisher": "dotdir",
+  "displayName": ".dir shell integration",
+  "description": "OSC 7 cwd sync and .dir OSC 779 (command finished) for integrated terminals.",
   "files": ["scripts"],
   "contributes": {
     "shellIntegrations": [

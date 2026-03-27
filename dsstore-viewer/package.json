@@ -1,9 +1,9 @@
 {
-  "name": "pdf-viewer",
-  "version": "1.0.4",
+  "name": "dsstore-viewer",
+  "version": "1.0.0",
   "publisher": "dotdir",
-  "displayName": "PDF Viewer",
-  "description": "View PDF files for .dir",
+  "displayName": ".DS_Store Viewer",
+  "description": "View macOS .DS_Store file metadata",
   "type": "module",
   "files": [
     "dist"
@@ -15,10 +15,10 @@
   "contributes": {
     "viewers": [
       {
-        "id": "pdf-viewer",
-        "label": "PDF Viewer",
+        "id": "dsstore-viewer",
+        "label": ".DS_Store Viewer",
         "patterns": [
-          "*.pdf"
+          ".DS_Store"
         ],
         "entry": "dist/viewer.cjs",
         "priority": 10
@@ -27,7 +27,6 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "esbuild": "^0.27.0",
     "typescript": "~5.9.3",
     "vite": "^8.0.0"
   }

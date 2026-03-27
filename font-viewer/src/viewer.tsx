@@ -96,7 +96,7 @@ const SAMPLES: Sample[] = [
 function randomFamilyName(fileName: string): string {
   const rand = Math.random().toString(36).slice(2);
   const safe = fileName.replace(/[^a-z0-9_-]+/gi, "-").slice(0, 32);
-  return `FaradayFont-${safe}-${rand}`;
+  return `DotDirFont-${safe}-${rand}`;
 }
 
 function formatBytes(bytes: number): string {
@@ -203,7 +203,7 @@ function App(props: { viewerProps: ViewerProps }) {
       setParseError(null);
       setFont(undefined);
 
-      const buffer = await frdy.readFile(viewerProps.filePath);
+      const buffer = await dotdir.readFile(viewerProps.filePath);
       if (cancelled) return;
 
       // Register font for preview (works for ttf/otf/woff/woff2 in modern browsers).
@@ -244,7 +244,7 @@ function App(props: { viewerProps: ViewerProps }) {
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") frdy.onClose();
+      if (e.key === "Escape") dotdir.onClose();
     };
     document.addEventListener("keydown", onKeyDown);
     return () => document.removeEventListener("keydown", onKeyDown);

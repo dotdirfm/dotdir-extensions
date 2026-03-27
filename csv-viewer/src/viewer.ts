@@ -70,7 +70,7 @@ export async function mountViewer(
     root.tabIndex = -1;
   }
 
-  const text = await frdy.readFileText(props.filePath);
+  const text = await dotdir.readFileText(props.filePath);
   const rows = parseCsv(text);
 
   const scrollWrap = document.createElement("div");
@@ -119,7 +119,7 @@ export async function mountViewer(
   scrollWrap.appendChild(table);
 
   keydownHandler = (e: KeyboardEvent) => {
-    if (e.key === "Escape") frdy.onClose();
+    if (e.key === "Escape") dotdir.onClose();
   };
   document.addEventListener("keydown", keydownHandler);
 }

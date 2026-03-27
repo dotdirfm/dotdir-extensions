@@ -30,7 +30,7 @@ export async function mountViewer(root: HTMLElement, props: ViewerProps): Promis
   rootEl = wrap;
   root.appendChild(wrap);
 
-  const buf = await frdy.readFile(props.filePath);
+  const buf = await dotdir.readFile(props.filePath);
   const blob = new Blob([buf], { type: 'application/pdf' });
   const url = URL.createObjectURL(blob);
   objectUrl = url;
@@ -44,7 +44,7 @@ export async function mountViewer(root: HTMLElement, props: ViewerProps): Promis
   wrap.appendChild(embed);
 
   keydownHandler = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') frdy.onClose();
+    if (e.key === 'Escape') dotdir.onClose();
   };
   document.addEventListener('keydown', keydownHandler);
 }

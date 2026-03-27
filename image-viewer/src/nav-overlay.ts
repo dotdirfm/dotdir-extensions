@@ -16,7 +16,7 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, css: string, html?: s
 }
 
 export function createNavOverlay(container: HTMLElement): NavOverlayHandle | null {
-  const exec = frdy.executeCommand.bind(frdy);
+  const exec = dotdir.executeCommand.bind(dotdir);
 
   // Top-right counter badge: "3 / 42"
   const counter = el('div',

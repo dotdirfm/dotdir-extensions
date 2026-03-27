@@ -4,7 +4,7 @@ function _frd_cd
   printf '\033[1A\033[2K\r'
 end
 
-# fire before each command so Faraday knows a command is running
+# fire before each command so .dir knows a command is running
 function fish_preexec
   printf '\033]779;S\033\\'
 end

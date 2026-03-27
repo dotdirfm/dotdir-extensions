@@ -268,7 +268,7 @@ function App({ editorProps }: { editorProps: EditorProps }) {
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Escape") frdy.onClose();
+      if (e.key === "Escape") dotdir.onClose();
       if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
         void runQuery();
       }
@@ -285,7 +285,7 @@ function App({ editorProps }: { editorProps: EditorProps }) {
       setStatusMsg("Loading database…");
       setResult({ kind: "empty" });
       try {
-        const buffer = await frdy.readFile(editorProps.filePath);
+        const buffer = await dotdir.readFile(editorProps.filePath);
         if (cancelled) return;
 
         const SQL: SqlJsStatic = await initSqlJs({

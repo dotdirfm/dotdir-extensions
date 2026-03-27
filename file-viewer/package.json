@@ -1,9 +1,9 @@
 {
   "name": "file-viewer",
   "version": "1.0.5",
-  "publisher": "faraday",
+  "publisher": "dotdir",
   "displayName": "File Viewer",
-  "description": "View file contents (text/binary) in Faraday",
+  "description": "View file contents (text/binary) for .dir",
   "type": "module",
   "files": [
     "dist"

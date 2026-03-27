@@ -1,9 +1,9 @@
 {
   "name": "image-viewer",
   "version": "1.1.0",
-  "publisher": "faraday",
+  "publisher": "dotdir",
   "displayName": "Image & Video Viewer",
-  "description": "View images and video files in Faraday",
+  "description": "View images and video files for .dir",
   "type": "module",
   "files": [
     "dist"

@@ -15,7 +15,7 @@ export interface HostApi {
   executeCommand<T = unknown>(command: string, args?: unknown): Promise<T>;
 
   /**
-   * Commands + keybindings API exposed via `window.frdy.commands.*`.
+   * Commands + keybindings API exposed via `window.dotdir.commands.*`.
    * This mimics VS Code's command/keybinding model.
    */
   commands: {
@@ -31,7 +31,7 @@ export interface HostApi {
 }
 
 declare global {
-  var frdy: HostApi;
+  var dotdir: HostApi;
 }
 
 export interface ViewerExtensionApi {

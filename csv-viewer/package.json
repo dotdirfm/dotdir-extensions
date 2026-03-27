@@ -1,9 +1,9 @@
 {
   "name": "csv-viewer",
   "version": "1.0.4",
-  "publisher": "faraday",
+  "publisher": "dotdir",
   "displayName": "CSV Viewer",
-  "description": "View CSV files in Faraday",
+  "description": "View CSV files for .dir",
   "type": "module",
   "files": [
     "dist"

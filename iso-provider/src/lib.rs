@@ -1,6 +1,6 @@
-//! Faraday fsProvider backend plugin for ISO 9660 disc images.
+//! .dir fsProvider backend plugin for ISO 9660 disc images.
 //!
-//! Implements the Faraday WASM plugin ABI:
+//! Implements the .dir WASM plugin ABI:
 //!   Exports: get_input_ptr, get_output_ptr, plugin_list, plugin_read
 //!   Imports: host_read_range, host_log, host_receive_bytes
 //!

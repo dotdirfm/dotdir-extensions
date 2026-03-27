@@ -1,6 +1,6 @@
 /**
  * Minimal types for host ↔ extension communication (Comlink).
- * Must stay in sync with faraday-tauri src/extensionApi.ts.
+ * Must stay in sync with dotdir src/extensionApi.ts.
  */
 
 export interface EditorGrammarPayload {
@@ -50,7 +50,7 @@ export interface HostApi {
 }
 
 declare global {
-  var frdy: HostApi;
+  var dotdir: HostApi;
 }
 
 export interface EditorExtensionApi {

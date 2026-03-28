@@ -15,7 +15,7 @@ const rootDir = path.resolve(__dirname, '..');
 
 const PACKAGES = [
   'monaco-editor', 'image-viewer', 'file-viewer', 'csv-viewer', 'pdf-viewer', 'font-viewer',
-  'sqlite-editor', 'zip-provider', 'iso-provider', 'shell-integration', 'dsstore-viewer'];
+  'sqlite-editor', 'zip-provider', 'iso-provider', 'shell-integration', 'dsstore-viewer', 'vscode-languages'];
 const OUT_DIR = path.join(rootDir, 'packed');
 
 function ensureDir(dir) {

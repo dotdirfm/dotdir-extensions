@@ -34,6 +34,7 @@
     "sql.js": "^1.13.0"
   },
   "devDependencies": {
+    "@dotdirfm/extension-api": "^0.1.0",
     "@types/react": "^19.1.12",
     "@types/react-dom": "^19.1.9",
     "@types/sql.js": "^1.4.10",

@@ -8,7 +8,7 @@ import * as monaco from 'monaco-editor/esm/vs/editor/editor.api.js';
 import { createOnigScanner, createOnigString, loadWASM } from 'vscode-oniguruma';
 import type { StateStack } from 'vscode-textmate';
 import { INITIAL, Registry as TMRegistry } from 'vscode-textmate';
-import type { ColorThemeData, EditorProps } from './types';
+import type { ColorThemeData, EditorProps } from '@dotdirfm/extension-api';
 // @ts-expect-error - Vite ?url for asset URL in extension iframe
 import onigWasmUrl from 'vscode-oniguruma/release/onig.wasm?url';
 
@@ -22,6 +22,7 @@ import monacoCss from 'monaco-editor/min/vs/editor/editor.main.css?raw';
 let editorInstance: monaco.editor.IStandaloneCodeEditor | null = null;
 let rootEl: HTMLDivElement | null = null;
 let monacoReady = false;
+let focusListener: (() => void) | null = null;
 
 // Cache Oniguruma + TextMate grammar JSON so language switches don't re-fetch everything.
 let onigWasmLoadPromise: Promise<void> | null = null;
@@ -468,8 +469,20 @@ export async function createEditorMount(root: HTMLElement, props: EditorProps): 
   });
 
   editor.focus();
+  requestAnimationFrame(() => editor.focus());
+  setTimeout(() => editor.focus(), 0);
+
+  const handleWindowFocus = () => {
+    editor.focus();
+  };
+  window.addEventListener('focus', handleWindowFocus);
+  focusListener = () => {
+    window.removeEventListener('focus', handleWindowFocus);
+    focusListener = null;
+  };
 
   return () => {
+    if (focusListener) focusListener();
     if (themeUnsubscribe) { themeUnsubscribe(); themeUnsubscribe = null; }
     if (cssVarThemeObserver) { cssVarThemeObserver.disconnect(); cssVarThemeObserver = null; }
     editor.dispose();
@@ -489,6 +502,7 @@ export function setEditorLanguage(langId: string): void {
 }
 
 export function disposeEditor(): void {
+  if (focusListener) focusListener();
   if (themeUnsubscribe) { themeUnsubscribe(); themeUnsubscribe = null; }
   if (editorInstance) {
     editorInstance.dispose();

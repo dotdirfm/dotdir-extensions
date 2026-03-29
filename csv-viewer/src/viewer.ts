@@ -1,4 +1,4 @@
-import type { ViewerProps } from "./types";
+import type { ViewerProps } from "@dotdirfm/extension-api";
 
 /**
  * Parse a single line of CSV, handling quoted fields.

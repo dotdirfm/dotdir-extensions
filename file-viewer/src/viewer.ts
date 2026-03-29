@@ -1,4 +1,4 @@
-import type { ViewerProps } from "./types";
+import type { ViewerProps } from "@dotdirfm/extension-api";
 
 const SCROLLBAR_WIDTH = 10;
 const SCROLLBAR_PADDING = 6;

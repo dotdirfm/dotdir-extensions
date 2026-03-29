@@ -1,4 +1,4 @@
-import type { ViewerExtensionApi, ViewerProps } from "./types";
+import type { ViewerExtensionApi, ViewerProps } from "@dotdirfm/extension-api";
 import { mountViewer, unmountViewer } from "./viewer";
 
 function createExtensionApi(): ViewerExtensionApi {

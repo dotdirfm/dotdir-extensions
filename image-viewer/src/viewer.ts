@@ -3,7 +3,7 @@ import {
   MEDIA_PATTERNS,
   type NavOverlayHandle,
 } from "./nav-overlay";
-import type { ViewerProps } from "./types";
+import type { ViewerProps } from "@dotdirfm/extension-api";
 import { attachControls, type ControlsHandle } from "./video-controls";
 import { isStreamable, streamVideo } from "./video-stream";
 

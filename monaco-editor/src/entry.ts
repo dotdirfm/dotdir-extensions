@@ -3,7 +3,7 @@
  */
 
 import { createEditorMount, disposeEditor, ensureTextMateLanguage, setEditorLanguage } from './editor';
-import type { EditorExtensionApi, EditorProps } from './types';
+import type { EditorExtensionApi, EditorProps } from '@dotdirfm/extension-api';
 
 function createExtensionApi(): EditorExtensionApi {
   let mounted = false;

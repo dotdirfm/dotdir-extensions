@@ -1,4 +1,4 @@
-import type { ViewerProps } from './types';
+import type { ViewerProps } from '@dotdirfm/extension-api';
 
 // ---- DS_Store Binary Parser ----
 // Format reference: https://metacpan.org/dist/Mac-Finder-DSStore/view/DSStoreFormat.pod

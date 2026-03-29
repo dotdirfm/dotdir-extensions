@@ -4,7 +4,7 @@ import type { Database, SqlJsStatic } from "sql.js";
 import initSqlJs from "sql.js";
 // @ts-expect-error - Vite ?url
 import wasmUrl from "sql.js/dist/sql-wasm.wasm?url";
-import type { EditorProps } from "./types";
+import type { EditorProps } from "@dotdirfm/extension-api";
 
 type QueryResult =
   | { kind: "empty" }

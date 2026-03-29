@@ -1,7 +1,7 @@
 import opentype, { type Font } from "opentype.js";
 import React, { useEffect, useMemo, useState } from "react";
 import { createRoot, type Root } from "react-dom/client";
-import type { ViewerProps } from "./types";
+import type { ViewerProps } from "@dotdirfm/extension-api";
 
 type ScriptId =
   | "latin"

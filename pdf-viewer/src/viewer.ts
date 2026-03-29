@@ -1,4 +1,4 @@
-import type { ViewerProps } from './types';
+import type { ViewerProps } from '@dotdirfm/extension-api';
 
 let objectUrl: string | null = null;
 let rootEl: HTMLElement | null = null;

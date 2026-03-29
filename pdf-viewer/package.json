@@ -27,9 +27,9 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "@dotdirfm/extension-api": "^0.1.0",
-    "esbuild": "^0.27.0",
-    "typescript": "~5.9.3",
-    "vite": "^8.0.0"
+    "@dotdirfm/extension-api": "catalog:",
+    "esbuild": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:"
   }
 }

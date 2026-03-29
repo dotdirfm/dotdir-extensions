@@ -13,7 +13,10 @@
       {
         "id": "iso-provider",
         "label": "ISO Provider",
-        "patterns": ["*.iso", "*.ISO"],
+        "patterns": [
+          "*.iso",
+          "*.ISO"
+        ],
         "entry": "dist/provider.wasm",
         "runtime": "backend",
         "priority": 10

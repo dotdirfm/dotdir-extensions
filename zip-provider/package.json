@@ -13,7 +13,9 @@
       {
         "id": "zip-provider",
         "label": "ZIP Provider",
-        "patterns": ["*.zip"],
+        "patterns": [
+          "*.zip"
+        ],
         "entry": "dist/provider.wasm",
         "runtime": "backend",
         "priority": 10

@@ -1,6 +1,6 @@
 {
   "name": "dsstore-viewer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "publisher": "dotdir",
   "displayName": ".DS_Store Viewer",
   "description": "View macOS .DS_Store file metadata",

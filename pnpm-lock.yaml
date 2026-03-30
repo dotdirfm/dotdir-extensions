@@ -7,8 +7,8 @@ settings:
 catalogs:
   default:
     '@dotdirfm/extension-api':
-      specifier: ^0.1.0
-      version: 0.1.1
+      specifier: ^0.1.2
+      version: 0.1.2
     '@types/opentype.js':
       specifier: ^1.3.8
       version: 1.3.9
@@ -73,7 +73,7 @@ importers:
     dependencies:
       '@dotdirfm/extension-api':
         specifier: 'catalog:'
-        version: 0.1.1
+        version: 0.1.2
     devDependencies:
       esbuild:
         specifier: 'catalog:'
@@ -89,7 +89,7 @@ importers:
     dependencies:
       '@dotdirfm/extension-api':
         specifier: 'catalog:'
-        version: 0.1.1
+        version: 0.1.2
     devDependencies:
       esbuild:
         specifier: 'catalog:'
@@ -105,7 +105,7 @@ importers:
     dependencies:
       '@dotdirfm/extension-api':
         specifier: 'catalog:'
-        version: 0.1.1
+        version: 0.1.2
     devDependencies:
       esbuild:
         specifier: 'catalog:'
@@ -121,7 +121,7 @@ importers:
     dependencies:
       '@dotdirfm/extension-api':
         specifier: 'catalog:'
-        version: 0.1.1
+        version: 0.1.2
       opentype.js:
         specifier: 'catalog:'
         version: 1.3.4
@@ -162,7 +162,7 @@ importers:
     devDependencies:
       '@dotdirfm/extension-api':
         specifier: 'catalog:'
-        version: 0.1.1
+        version: 0.1.2
       esbuild:
         specifier: 'catalog:'
         version: 0.27.4
@@ -189,7 +189,7 @@ importers:
     devDependencies:
       '@dotdirfm/extension-api':
         specifier: 'catalog:'
-        version: 0.1.1
+        version: 0.1.2
       esbuild:
         specifier: 'catalog:'
         version: 0.27.4
@@ -204,7 +204,7 @@ importers:
     devDependencies:
       '@dotdirfm/extension-api':
         specifier: 'catalog:'
-        version: 0.1.1
+        version: 0.1.2
       esbuild:
         specifier: 'catalog:'
         version: 0.27.4
@@ -214,6 +214,8 @@ importers:
       vite:
         specifier: 'catalog:'
         version: 8.0.0(@types/node@25.5.0)(esbuild@0.27.4)
+
+  shell-integration: {}
 
   sqlite-editor:
     dependencies:
@@ -229,7 +231,7 @@ importers:
     devDependencies:
       '@dotdirfm/extension-api':
         specifier: 'catalog:'
-        version: 0.1.1
+        version: 0.1.2
       '@types/react':
         specifier: 'catalog:'
         version: 19.2.14
@@ -251,6 +253,8 @@ importers:
       vite:
         specifier: 'catalog:'
         version: 8.0.0(@types/node@25.5.0)(esbuild@0.27.4)
+
+  vscode-languages: {}
 
   zip-provider: {}
 
@@ -339,8 +343,8 @@ packages:
     resolution: {integrity: sha512-LwdZHpScM4Qz8Xw2iKSzS+cfglZzJGvofQICy7W7v4caru4EaAmyUuO6BGrbyQ2mYV11W0U8j5mBhd14dd3B0A==}
     engines: {node: '>=6.9.0'}
 
-  '@dotdirfm/extension-api@0.1.1':
-    resolution: {integrity: sha512-DOu2CaTs+QzANXXGYTiBtRqwGSfQ1DgNJF6MT9mJ86bp/pvehpDrbYjPc10iJ5i/8hwSAClD++ddNTtWuykLIw==}
+  '@dotdirfm/extension-api@0.1.2':
+    resolution: {integrity: sha512-hExFkcVs4Uk1dajdHwWJmE+IQBnvQYAdtIc64qk4kiq6aHANMVSkbCL6sDr0y27PBGCV5h7MA79KrZ7w9n5CCQ==}
 
   '@emnapi/core@1.9.0':
     resolution: {integrity: sha512-0DQ98G9ZQZOxfUcQn1waV2yS8aWdZ6kJMbYCJB3oUBecjWYO1fqJ+a1DRfPF3O5JEkwqwP1A9QEN/9mYm2Yd0w==}
@@ -1399,7 +1403,7 @@ snapshots:
       '@babel/helper-string-parser': 7.27.1
       '@babel/helper-validator-identifier': 7.28.5
 
-  '@dotdirfm/extension-api@0.1.1': {}
+  '@dotdirfm/extension-api@0.1.2': {}
 
   '@emnapi/core@1.9.0':
     dependencies:

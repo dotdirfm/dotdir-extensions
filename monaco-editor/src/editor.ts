@@ -404,7 +404,7 @@ export async function createEditorMount(root: HTMLElement, props: EditorProps): 
   // Subscribe to live theme changes
   if (themeUnsubscribe) themeUnsubscribe();
   if (cssVarThemeObserver) { cssVarThemeObserver.disconnect(); cssVarThemeObserver = null; }
-  themeUnsubscribe = dotdir.onThemeChange?.((newTheme) => {
+  themeUnsubscribe = dotdir.onThemeChange((newTheme) => {
     if (newTheme.colors || (Array.isArray(newTheme.tokenColors) && newTheme.tokenColors.length > 0)) {
       usingVsCodeTheme = true;
       applyColorThemeToEditor(newTheme);
@@ -427,10 +427,12 @@ export async function createEditorMount(root: HTMLElement, props: EditorProps): 
   cssVarThemeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['style'] });
 
   let dirty = false;
+  dotdir.setDirty?.(false);
   const save = async (): Promise<boolean> => {
     try {
       await dotdir.writeFile(props.filePath, editor.getValue());
       dirty = false;
+      dotdir.setDirty?.(false);
       return true;
     } catch {
       return false;
@@ -438,7 +440,9 @@ export async function createEditorMount(root: HTMLElement, props: EditorProps): 
   };
 
   editor.onDidChangeModelContent(() => {
+    if (dirty) return;
     dirty = true;
+    dotdir.setDirty?.(true);
   });
 
   editor.addAction({
@@ -454,17 +458,7 @@ export async function createEditorMount(root: HTMLElement, props: EditorProps): 
     label: 'Close Editor',
     keybindings: [monaco.KeyCode.Escape],
     run: () => {
-      if (!dirty) {
-        dotdir.onClose();
-        return;
-      }
-      if (window.confirm('Save changes before closing?')) {
-        void save().then((ok) => {
-          if (ok) dotdir.onClose();
-        });
-      } else {
-        dotdir.onClose();
-      }
+      dotdir.onClose();
     },
   });
 

@@ -10,7 +10,6 @@ function createExtensionApi(): EditorExtensionApi {
   let unmountFn: (() => void) | null = null;
   let lastFilePath: string | null = null;
   let latestProps: EditorProps | null = null;
-  let lastLangId: string | null = null;
 
   return {
     async mount(root: HTMLElement, props: EditorProps): Promise<void> {
@@ -30,7 +29,6 @@ function createExtensionApi(): EditorExtensionApi {
       unmountFn = await createEditorMount(root, props);
       mounted = true;
       lastFilePath = props.filePath;
-      lastLangId = props.langId;
     },
     async unmount(): Promise<void> {
       if (!mounted) return;
@@ -41,7 +39,6 @@ function createExtensionApi(): EditorExtensionApi {
       disposeEditor();
       mounted = false;
       lastFilePath = null;
-      lastLangId = null;
     },
     setLanguage(langId: string): void {
       if (!mounted) return;
@@ -52,11 +49,9 @@ function createExtensionApi(): EditorExtensionApi {
           await ensureTextMateLanguage(latestProps, langId);
         }
         setEditorLanguage(langId);
-        lastLangId = langId;
       })().catch(() => {
         // If tokenization fails, still update the model language so Monaco behaves sanely.
         setEditorLanguage(langId);
-        lastLangId = langId;
       });
     },
   };

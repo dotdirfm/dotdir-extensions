@@ -58,11 +58,12 @@ let scrollbarThumb: HTMLDivElement | null = null;
 let hexBtn: HTMLButtonElement | null = null;
 let wrapChk: HTMLInputElement | null = null;
 
-let keydownHandler: ((e: KeyboardEvent) => void) | null = null;
 let resizeHandler: (() => void) | null = null;
 let wheelHandler: ((e: WheelEvent) => void) | null = null;
 let ptrMoveHandler: ((e: PointerEvent) => void) | null = null;
 let ptrUpHandler: ((e: PointerEvent) => void) | null = null;
+let inputKeydownHandler: ((e: KeyboardEvent) => void) | null = null;
+let commandDisposers: Array<{ dispose: () => void }> = [];
 let inertiaFrame: number | null = null;
 let lastTouchY = 0,
   lastTouchTime = 0,
@@ -87,6 +88,17 @@ const hex8 = (n: number) => n.toString(16).toUpperCase().padStart(8, "0");
 const hex2 = (b: number) => b.toString(16).toUpperCase().padStart(2, "0");
 function clamp(n: number) {
   return fileSize <= 0 ? 0 : Math.max(0, Math.min(n, fileSize - 1));
+}
+
+function disposeCommands() {
+  for (const disposable of commandDisposers) {
+    try {
+      disposable.dispose();
+    } catch {
+      // ignore
+    }
+  }
+  commandDisposers = [];
 }
 
 // ── Data source ────────────────────────────────────────────────────────────────
@@ -486,7 +498,11 @@ export async function mountViewer(
   setEnc("ascii");
 
   // Cleanup previous
-  if (keydownHandler) document.removeEventListener("keydown", keydownHandler);
+  disposeCommands();
+  if (inputKeydownHandler && inputBarInput) {
+    inputBarInput.removeEventListener("keydown", inputKeydownHandler);
+    inputKeydownHandler = null;
+  }
   if (resizeHandler) window.removeEventListener("resize", resizeHandler);
   if (wheelHandler && frameDiv)
     frameDiv.removeEventListener("wheel", wheelHandler);
@@ -892,6 +908,90 @@ export async function mountViewer(
     frameDiv?.focus();
   };
 
+  const closeViewer = () => {
+    dotdir.onClose();
+  };
+
+  const scrollLineDown = async () => {
+    await scrollDown(1);
+  };
+
+  const scrollLineUp = async () => {
+    await scrollUp(1);
+  };
+
+  const scrollViewerLeft = async () => {
+    if (hexMode) {
+      hexCursor = Math.max(0, hexCursor - 1);
+      hexScrollToCursor();
+      await render();
+      return;
+    }
+    await scrollLeft(1);
+  };
+
+  const scrollViewerRight = async () => {
+    if (hexMode) {
+      hexCursor = clamp(hexCursor + 1);
+      hexScrollToCursor();
+      await render();
+      return;
+    }
+    await scrollRight(1);
+  };
+
+  const scrollPageDown = async () => {
+    await scrollDown(rows);
+  };
+
+  const scrollPageUp = async () => {
+    await scrollUp(rows);
+  };
+
+  const scrollToStart = async () => {
+    if (hexMode) {
+      hexCursor = 0;
+      dpyStart = 0;
+    } else {
+      dpyStart = 0;
+      dpyParagraphSkipLines = 0;
+      dpyTextColumn = 0;
+    }
+    await render();
+  };
+
+  const scrollToEnd = async () => {
+    await jumpToRatio(1);
+  };
+
+  const toggleWrap = async () => {
+    if (!wrapChk) return;
+    wrapChk.checked = !wrapChk.checked;
+    wrapChk.dispatchEvent(new Event("change"));
+  };
+
+  const toggleHex = async () => {
+    hexBtn?.click();
+  };
+
+  const openGoto = async () => {
+    showBar("goto");
+  };
+
+  const openSearch = async () => {
+    showBar("search");
+  };
+
+  const searchNext = async () => {
+    if (searchQuery) await doSearch("forward");
+    else showBar("search");
+  };
+
+  const searchPrevious = async () => {
+    if (searchQuery) await doSearch("backward");
+    else showBar("search");
+  };
+
   // ── Event handlers ──
   measure();
 
@@ -927,6 +1027,27 @@ export async function mountViewer(
     inputBarCase.addEventListener("change", () => {
       searchCaseSensitive = inputBarCase!.checked;
     });
+
+  const commands = dotdir.commands;
+  if (!commands) throw new Error("Host commands API is unavailable");
+  disposeCommands();
+  commandDisposers = [
+    commands.registerCommand("fileViewer.close", closeViewer),
+    commands.registerCommand("fileViewer.scrollLineDown", scrollLineDown),
+    commands.registerCommand("fileViewer.scrollLineUp", scrollLineUp),
+    commands.registerCommand("fileViewer.scrollLeft", scrollViewerLeft),
+    commands.registerCommand("fileViewer.scrollRight", scrollViewerRight),
+    commands.registerCommand("fileViewer.scrollPageDown", scrollPageDown),
+    commands.registerCommand("fileViewer.scrollPageUp", scrollPageUp),
+    commands.registerCommand("fileViewer.scrollToStart", scrollToStart),
+    commands.registerCommand("fileViewer.scrollToEnd", scrollToEnd),
+    commands.registerCommand("fileViewer.toggleWrap", toggleWrap),
+    commands.registerCommand("fileViewer.toggleHex", toggleHex),
+    commands.registerCommand("fileViewer.openGoto", openGoto),
+    commands.registerCommand("fileViewer.openSearch", openSearch),
+    commands.registerCommand("fileViewer.searchNext", searchNext),
+    commands.registerCommand("fileViewer.searchPrevious", searchPrevious),
+  ];
 
   // Wheel
   wheelHandler = (e: WheelEvent) => {
@@ -1014,127 +1135,24 @@ export async function mountViewer(
   };
   window.addEventListener("pointerup", ptrUpHandler);
 
-  // Keyboard
-  keydownHandler = (e: KeyboardEvent) => {
-    const inInput = inputBarInput && document.activeElement === inputBarInput;
-    if (inInput) {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        hideBar();
-        return;
+  inputKeydownHandler = (e: KeyboardEvent) => {
+    if (!inputBarInput || document.activeElement !== inputBarInput) return;
+    if (e.key === "Escape") {
+      e.preventDefault();
+      hideBar();
+      return;
+    }
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (inputBarMode === "search") {
+        searchQuery = inputBarInput.value;
+        void doSearch(e.shiftKey ? "backward" : "forward");
+      } else if (inputBarMode === "goto") {
+        void doGoto(inputBarInput.value);
       }
-      if (e.key === "Enter") {
-        e.preventDefault();
-        if (inputBarMode === "search") {
-          searchQuery = inputBarInput!.value;
-          void doSearch(e.shiftKey ? "backward" : "forward");
-        } else if (inputBarMode === "goto") {
-          void doGoto(inputBarInput!.value);
-        }
-        return;
-      }
-      return; // Don't process other keys when input focused
-    }
-
-    switch (e.key) {
-      case "Escape":
-        dotdir.onClose();
-        return;
-      case "ArrowDown":
-        e.preventDefault();
-        void scrollDown(1);
-        return;
-      case "ArrowUp":
-        e.preventDefault();
-        void scrollUp(1);
-        return;
-      case "ArrowLeft":
-        e.preventDefault();
-        if (hexMode) {
-          hexCursor = Math.max(0, hexCursor - 1);
-          hexScrollToCursor();
-          void render();
-        } else void scrollLeft(1);
-        return;
-      case "ArrowRight":
-        e.preventDefault();
-        if (hexMode) {
-          hexCursor = clamp(hexCursor + 1);
-          hexScrollToCursor();
-          void render();
-        } else void scrollRight(1);
-        return;
-      case "PageDown":
-        e.preventDefault();
-        void scrollDown(rows);
-        return;
-      case "PageUp":
-        e.preventDefault();
-        void scrollUp(rows);
-        return;
-      case " ":
-        e.preventDefault();
-        void scrollDown(rows);
-        return; // MC pager: Space = PageDown
-      case "Home":
-        e.preventDefault();
-        if (hexMode) {
-          hexCursor = 0;
-          dpyStart = 0;
-        } else {
-          dpyStart = 0;
-          dpyParagraphSkipLines = 0;
-          dpyTextColumn = 0;
-        }
-        void render();
-        return;
-      case "End":
-        e.preventDefault();
-        void jumpToRatio(1);
-        return;
-    }
-
-    // F-keys
-    if (e.key === "F2") {
-      e.preventDefault();
-      wrapChk!.checked = !wrapChk!.checked;
-      wrapChk!.dispatchEvent(new Event("change"));
-      return;
-    }
-    if (e.key === "F4") {
-      e.preventDefault();
-      hexBtn!.click();
-      return;
-    }
-    if (e.key === "F5") {
-      e.preventDefault();
-      showBar("goto");
-      return;
-    }
-    if (e.key === "F7") {
-      e.preventDefault();
-      showBar("search");
-      return;
-    }
-    if (e.key === "F3") {
-      e.preventDefault();
-      if (searchQuery) void doSearch(e.shiftKey ? "backward" : "forward");
-      else showBar("search");
-      return;
-    }
-    // Ctrl shortcuts
-    if ((e.ctrlKey || e.metaKey) && e.key === "f") {
-      e.preventDefault();
-      showBar("search");
-      return;
-    }
-    if ((e.ctrlKey || e.metaKey) && e.key === "g") {
-      e.preventDefault();
-      showBar("goto");
-      return;
     }
   };
-  document.addEventListener("keydown", keydownHandler);
+  inputBarInput?.addEventListener("keydown", inputKeydownHandler);
 
   resizeHandler = () => {
     measure();
@@ -1149,9 +1167,10 @@ export async function mountViewer(
 // ── Unmount ────────────────────────────────────────────────────────────────────
 export function unmountViewer(): void {
   stopInertia();
-  if (keydownHandler) {
-    document.removeEventListener("keydown", keydownHandler);
-    keydownHandler = null;
+  disposeCommands();
+  if (inputKeydownHandler && inputBarInput) {
+    inputBarInput.removeEventListener("keydown", inputKeydownHandler);
+    inputKeydownHandler = null;
   }
   if (resizeHandler) {
     window.removeEventListener("resize", resizeHandler);

@@ -184,26 +184,26 @@ export async function mountViewer(
   navHandle = createNavOverlay(wrap);
 
   // Arrow key navigation via .dir command system (no document-level key listeners).
+  const commands = dotdir.commands;
+  if (!commands) throw new Error("Host commands API is unavailable");
   const prevCommandId = "imageViewer.navigatePrev";
   const nextCommandId = "imageViewer.navigateNext";
 
-  disposeNavPrevCommand = dotdir.commands.registerCommand(
+  disposeNavPrevCommand = commands.registerCommand(
     prevCommandId,
     async () => {
       await dotdir.executeCommand("navigatePrev", {
         patterns: MEDIA_PATTERNS,
       });
     },
-    { title: "Image Viewer: Previous", when: "focusViewer" },
   );
-  disposeNavNextCommand = dotdir.commands.registerCommand(
+  disposeNavNextCommand = commands.registerCommand(
     nextCommandId,
     async () => {
       await dotdir.executeCommand("navigateNext", {
         patterns: MEDIA_PATTERNS,
       });
     },
-    { title: "Image Viewer: Next", when: "focusViewer" },
   );
 
   // Re-subscribe to external file changes for this image/video.

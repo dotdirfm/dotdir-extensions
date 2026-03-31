@@ -24,6 +24,43 @@
         "entry": "dist/viewer.cjs",
         "priority": 0
       }
+    ],
+    "commands": [
+      { "command": "fileViewer.close", "title": "File Viewer: Close" },
+      { "command": "fileViewer.scrollLineDown", "title": "File Viewer: Scroll Line Down" },
+      { "command": "fileViewer.scrollLineUp", "title": "File Viewer: Scroll Line Up" },
+      { "command": "fileViewer.scrollLeft", "title": "File Viewer: Scroll Left" },
+      { "command": "fileViewer.scrollRight", "title": "File Viewer: Scroll Right" },
+      { "command": "fileViewer.scrollPageDown", "title": "File Viewer: Scroll Page Down" },
+      { "command": "fileViewer.scrollPageUp", "title": "File Viewer: Scroll Page Up" },
+      { "command": "fileViewer.scrollToStart", "title": "File Viewer: Scroll To Start" },
+      { "command": "fileViewer.scrollToEnd", "title": "File Viewer: Scroll To End" },
+      { "command": "fileViewer.toggleWrap", "title": "File Viewer: Toggle Wrap" },
+      { "command": "fileViewer.toggleHex", "title": "File Viewer: Toggle Hex Mode" },
+      { "command": "fileViewer.openGoto", "title": "File Viewer: Open Go To" },
+      { "command": "fileViewer.openSearch", "title": "File Viewer: Open Search" },
+      { "command": "fileViewer.searchNext", "title": "File Viewer: Search Next" },
+      { "command": "fileViewer.searchPrevious", "title": "File Viewer: Search Previous" }
+    ],
+    "keybindings": [
+      { "command": "fileViewer.close", "key": "escape", "when": "focusViewer" },
+      { "command": "fileViewer.scrollLineDown", "key": "down", "when": "focusViewer" },
+      { "command": "fileViewer.scrollLineUp", "key": "up", "when": "focusViewer" },
+      { "command": "fileViewer.scrollLeft", "key": "left", "when": "focusViewer" },
+      { "command": "fileViewer.scrollRight", "key": "right", "when": "focusViewer" },
+      { "command": "fileViewer.scrollPageDown", "key": "pagedown", "when": "focusViewer" },
+      { "command": "fileViewer.scrollPageDown", "key": "space", "when": "focusViewer" },
+      { "command": "fileViewer.scrollPageUp", "key": "pageup", "when": "focusViewer" },
+      { "command": "fileViewer.scrollToStart", "key": "home", "when": "focusViewer" },
+      { "command": "fileViewer.scrollToEnd", "key": "end", "when": "focusViewer" },
+      { "command": "fileViewer.toggleWrap", "key": "f2", "when": "focusViewer" },
+      { "command": "fileViewer.toggleHex", "key": "f4", "when": "focusViewer" },
+      { "command": "fileViewer.openGoto", "key": "f5", "when": "focusViewer" },
+      { "command": "fileViewer.openGoto", "key": "ctrl+g", "mac": "cmd+g", "when": "focusViewer" },
+      { "command": "fileViewer.openSearch", "key": "f7", "when": "focusViewer" },
+      { "command": "fileViewer.openSearch", "key": "ctrl+f", "mac": "cmd+f", "when": "focusViewer" },
+      { "command": "fileViewer.searchNext", "key": "f3", "when": "focusViewer" },
+      { "command": "fileViewer.searchPrevious", "key": "shift+f3", "when": "focusViewer" }
     ]
   },
   "dependencies": {

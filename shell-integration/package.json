@@ -1,18 +1,28 @@
 {
   "name": "shell-integration",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "publisher": "dotdir",
   "displayName": ".dir shell integration",
   "description": "OSC 7 cwd sync and .dir OSC 779 (command finished) for integrated terminals.",
-  "files": ["scripts"],
+  "files": [
+    "scripts"
+  ],
   "contributes": {
     "shellIntegrations": [
       {
         "shell": "bash",
         "label": "bash",
         "scriptPath": "scripts/bash.sh",
-        "executableCandidates": ["/bin/bash", "/usr/bin/bash", "/opt/homebrew/bin/bash"],
-        "platforms": ["darwin", "linux", "unix"],
+        "executableCandidates": [
+          "/bin/bash",
+          "/usr/bin/bash",
+          "/opt/homebrew/bin/bash"
+        ],
+        "platforms": [
+          "darwin",
+          "linux",
+          "unix"
+        ],
         "hiddenCdTemplate": " _frd_cd {{cwd}}",
         "cwdEscape": "posix",
         "lineEnding": "\n"
@@ -21,8 +31,16 @@
         "shell": "zsh",
         "label": "zsh",
         "scriptPath": "scripts/zsh.zsh",
-        "executableCandidates": ["/bin/zsh", "/usr/bin/zsh", "/opt/homebrew/bin/zsh"],
-        "platforms": ["darwin", "linux", "unix"],
+        "executableCandidates": [
+          "/bin/zsh",
+          "/usr/bin/zsh",
+          "/opt/homebrew/bin/zsh"
+        ],
+        "platforms": [
+          "darwin",
+          "linux",
+          "unix"
+        ],
         "hiddenCdTemplate": " _frd_cd {{cwd}}",
         "cwdEscape": "posix",
         "lineEnding": "\n"
@@ -31,8 +49,16 @@
         "shell": "fish",
         "label": "fish",
         "scriptPath": "scripts/fish.fish",
-        "executableCandidates": ["/usr/local/bin/fish", "/opt/homebrew/bin/fish", "/usr/bin/fish"],
-        "platforms": ["darwin", "linux", "unix"],
+        "executableCandidates": [
+          "/usr/local/bin/fish",
+          "/opt/homebrew/bin/fish",
+          "/usr/bin/fish"
+        ],
+        "platforms": [
+          "darwin",
+          "linux",
+          "unix"
+        ],
         "hiddenCdTemplate": "_frd_cd {{cwd}}",
         "cwdEscape": "posix",
         "lineEnding": "\n"
@@ -47,8 +73,17 @@
           "/opt/homebrew/bin/pwsh",
           "$ProgramFiles/PowerShell/7/pwsh.exe"
         ],
-        "platforms": ["windows", "darwin", "linux", "unix"],
-        "spawnArgs": ["-NoLogo", "-NoExit", "-Command"],
+        "platforms": [
+          "windows",
+          "darwin",
+          "linux",
+          "unix"
+        ],
+        "spawnArgs": [
+          "-NoLogo",
+          "-NoExit",
+          "-Command"
+        ],
         "scriptArg": true,
         "hiddenCdTemplate": "_frd_cd {{cwd}}",
         "cwdEscape": "powershell",
@@ -62,8 +97,15 @@
           "C:\\\\Windows\\\\System32\\\\WindowsPowerShell\\\\v1.0\\\\powershell.exe",
           "powershell"
         ],
-        "platforms": ["windows"],
-        "spawnArgs": ["-NoLogo", "-NoProfile", "-NoExit", "-Command"],
+        "platforms": [
+          "windows"
+        ],
+        "spawnArgs": [
+          "-NoLogo",
+          "-NoProfile",
+          "-NoExit",
+          "-Command"
+        ],
         "scriptArg": true,
         "hiddenCdTemplate": "_frd_cd {{cwd}}",
         "cwdEscape": "powershell",

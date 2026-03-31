@@ -1,6 +1,6 @@
 {
   "name": "sqlite-editor",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "publisher": "dotdir",
   "displayName": "SQLite Editor",
   "description": "Browse and query SQLite databases for .dir",

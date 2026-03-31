@@ -1,6 +1,6 @@
 {
   "name": "iso-provider",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "publisher": "dotdir",
   "displayName": "ISO Provider",
   "description": "Browse ISO 9660 disc image contents for .dir",

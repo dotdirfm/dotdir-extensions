@@ -2,7 +2,7 @@
  * .dir Monaco Editor extension — entry point.
  */
 
-import { createEditorMount, disposeEditor, ensureTextMateLanguage, setEditorLanguage } from './editor';
+import { createEditorMount, disposeEditor, ensureTextMateLanguage, focusEditor, setEditorLanguage } from './editor';
 import type { EditorExtensionApi, EditorProps } from '@dotdirfm/extension-api';
 
 function createExtensionApi(): EditorExtensionApi {
@@ -39,6 +39,10 @@ function createExtensionApi(): EditorExtensionApi {
       disposeEditor();
       mounted = false;
       lastFilePath = null;
+    },
+    focus(): void {
+      if (!mounted) return;
+      focusEditor();
     },
     setLanguage(langId: string): void {
       if (!mounted) return;

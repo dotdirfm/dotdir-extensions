@@ -101,6 +101,71 @@ function getMonacoModule(): typeof Monaco {
   return monacoModule;
 }
 
+function focusEditorDomTarget(editor: Monaco.editor.IStandaloneCodeEditor | null): void {
+  if (!editor) return;
+  try {
+    window.focus();
+  } catch {
+    // ignore
+  }
+  editor.focus();
+  const domNode = editor.getDomNode();
+  if (!domNode) return;
+  try {
+    if (domNode.tabIndex < 0) {
+      domNode.tabIndex = 0;
+    }
+    domNode.focus();
+  } catch {
+    // ignore
+  }
+  const target = domNode.querySelector('textarea.inputarea, textarea, [contenteditable="true"]');
+  if (target instanceof HTMLElement) {
+    try {
+      target.focus();
+      if (target instanceof HTMLTextAreaElement) {
+        const end = target.value.length;
+        target.setSelectionRange(end, end);
+      }
+    } catch {
+      // ignore
+    }
+  }
+}
+
+function stabilizeInitialViewport(editor: Monaco.editor.IStandaloneCodeEditor | null): void {
+  if (!editor) return;
+  try {
+    editor.layout();
+    editor.setScrollTop(0);
+    editor.setScrollLeft(0);
+  } catch {
+    // ignore
+  }
+}
+
+function scheduleEditorFocus(editor: Monaco.editor.IStandaloneCodeEditor | null): void {
+  if (!editor) return;
+  const run = () => focusEditorDomTarget(editor);
+  run();
+  requestAnimationFrame(run);
+  setTimeout(run, 0);
+  setTimeout(run, 50);
+  setTimeout(run, 150);
+  setTimeout(run, 300);
+  setTimeout(run, 600);
+}
+
+function scheduleInitialViewportStabilization(editor: Monaco.editor.IStandaloneCodeEditor | null): void {
+  if (!editor) return;
+  const run = () => stabilizeInitialViewport(editor);
+  run();
+  requestAnimationFrame(run);
+  setTimeout(run, 0);
+  setTimeout(run, 50);
+  setTimeout(run, 150);
+}
+
 /**
  * Ensure TextMate tokenization is registered for a specific language id.
  * Used for initial mount and for language switching without reloading the iframe.
@@ -496,12 +561,11 @@ export async function createEditorMount(root: HTMLElement, props: EditorProps): 
     },
   });
 
-  editor.focus();
-  requestAnimationFrame(() => editor.focus());
-  setTimeout(() => editor.focus(), 0);
+  scheduleInitialViewportStabilization(editor);
+  scheduleEditorFocus(editor);
 
   const handleWindowFocus = () => {
-    editor.focus();
+    scheduleEditorFocus(editor);
   };
   window.addEventListener('focus', handleWindowFocus);
   focusListener = () => {
@@ -532,6 +596,11 @@ export function setEditorLanguage(langId: string): void {
       monaco.editor.setModelLanguage(model, langId);
     }
   }
+}
+
+export function focusEditor(): void {
+  if (!editorInstance) return;
+  scheduleEditorFocus(editorInstance);
 }
 
 export function disposeEditor(): void {

@@ -23,6 +23,7 @@ let editorInstance: monaco.editor.IStandaloneCodeEditor | null = null;
 let rootEl: HTMLDivElement | null = null;
 let monacoReady = false;
 let focusListener: (() => void) | null = null;
+let disposeSaveCommand: (() => void) | null = null;
 
 // Cache Oniguruma + TextMate grammar JSON so language switches don't re-fetch everything.
 let onigWasmLoadPromise: Promise<void> | null = null;
@@ -439,6 +440,15 @@ export async function createEditorMount(root: HTMLElement, props: EditorProps): 
     }
   };
 
+  disposeSaveCommand?.();
+  disposeSaveCommand = null;
+  const commands = dotdir.commands;
+  if (commands) {
+    disposeSaveCommand = commands.registerCommand('dotdir.save', async () => {
+      await save();
+    }).dispose;
+  }
+
   editor.onDidChangeModelContent(() => {
     if (dirty) return;
     dirty = true;
@@ -476,6 +486,10 @@ export async function createEditorMount(root: HTMLElement, props: EditorProps): 
   };
 
   return () => {
+    if (disposeSaveCommand) {
+      disposeSaveCommand();
+      disposeSaveCommand = null;
+    }
     if (focusListener) focusListener();
     if (themeUnsubscribe) { themeUnsubscribe(); themeUnsubscribe = null; }
     if (cssVarThemeObserver) { cssVarThemeObserver.disconnect(); cssVarThemeObserver = null; }
@@ -496,6 +510,10 @@ export function setEditorLanguage(langId: string): void {
 }
 
 export function disposeEditor(): void {
+  if (disposeSaveCommand) {
+    disposeSaveCommand();
+    disposeSaveCommand = null;
+  }
   if (focusListener) focusListener();
   if (themeUnsubscribe) { themeUnsubscribe(); themeUnsubscribe = null; }
   if (editorInstance) {

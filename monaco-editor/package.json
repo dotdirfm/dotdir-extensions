@@ -24,6 +24,19 @@
         "priority": 0
       }
     ],
+    "commands": [
+      {
+        "command": "dotdir.save",
+        "title": "Save File"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "dotdir.save",
+        "key": "f2",
+        "when": "focusEditor"
+      }
+    ],
     "languages": [
       {
         "id": "plaintext",

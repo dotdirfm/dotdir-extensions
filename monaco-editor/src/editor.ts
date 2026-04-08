@@ -4,26 +4,27 @@
  * Supports custom TextMate grammars passed from the host (from all loaded extensions).
  */
 
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api.js';
-import { createOnigScanner, createOnigString, loadWASM } from 'vscode-oniguruma';
+import type * as Monaco from 'monaco-editor/esm/vs/editor/editor.api.js';
 import type { StateStack } from 'vscode-textmate';
-import { INITIAL, Registry as TMRegistry } from 'vscode-textmate';
 import type { ColorThemeData, EditorProps } from '@dotdirfm/extension-api';
 // @ts-expect-error - Vite ?url for asset URL in extension iframe
 import onigWasmUrl from 'vscode-oniguruma/release/onig.wasm?url';
 
-// Inline worker so the extension works when loaded as a single blob (no separate worker URL).
-// @ts-expect-error - Vite ?worker&inline
-import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker.js?worker&inline';
-// Inject at runtime — host only loads the JS entry, so CSS must be in the bundle and applied in the iframe.
-// @ts-expect-error - Vite ?raw
-import monacoCss from 'monaco-editor/min/vs/editor/editor.main.css?raw';
+// @ts-expect-error - Vite worker URL
+import EditorWorker from 'monaco-editor/esm/vs/editor/editor.worker.js?worker';
+// @ts-expect-error - Vite CSS asset URL
+import monacoCssUrl from 'monaco-editor/min/vs/editor/editor.main.css?url';
 
-let editorInstance: monaco.editor.IStandaloneCodeEditor | null = null;
+let editorInstance: Monaco.editor.IStandaloneCodeEditor | null = null;
 let rootEl: HTMLDivElement | null = null;
 let monacoReady = false;
+let monacoCssReady = false;
 let focusListener: (() => void) | null = null;
 let disposeSaveCommand: (() => void) | null = null;
+let monacoModule: typeof Monaco | null = null;
+let monacoModulePromise: Promise<typeof import('monaco-editor/esm/vs/editor/editor.api.js')> | null = null;
+let textMateModulePromise: Promise<typeof import('vscode-textmate')> | null = null;
+let onigurumaModulePromise: Promise<typeof import('vscode-oniguruma')> | null = null;
 
 // Cache Oniguruma + TextMate grammar JSON so language switches don't re-fetch everything.
 let onigWasmLoadPromise: Promise<void> | null = null;
@@ -32,7 +33,7 @@ const activatedTokenProviders = new Set<string>(); // key: `${langIdLower}\0${sc
 
 // ── TextMate state wrapper for Monaco ─────────────────────────────────
 
-class TMState implements monaco.languages.IState {
+class TMState implements Monaco.languages.IState {
   constructor(private _ruleStack: StateStack) {}
   get ruleStack(): StateStack {
     return this._ruleStack;
@@ -40,7 +41,7 @@ class TMState implements monaco.languages.IState {
   clone(): TMState {
     return new TMState(this._ruleStack);
   }
-  equals(other: monaco.languages.IState): boolean {
+  equals(other: Monaco.languages.IState): boolean {
     return other instanceof TMState && other._ruleStack === this._ruleStack;
   }
 }
@@ -80,9 +81,24 @@ async function ensureOnigurumaWasmLoaded(): Promise<void> {
       wasm = null;
     }
     if (!wasm) return;
-    await loadWASM(wasm);
+    const oniguruma = await (onigurumaModulePromise ??= import('vscode-oniguruma'));
+    await oniguruma.loadWASM(wasm);
   })();
   return onigWasmLoadPromise;
+}
+
+async function ensureMonacoModule(): Promise<typeof Monaco> {
+  if (monacoModule) return monacoModule;
+  const loaded = await (monacoModulePromise ??= import('monaco-editor/esm/vs/editor/editor.api.js'));
+  monacoModule = loaded;
+  return loaded;
+}
+
+function getMonacoModule(): typeof Monaco {
+  if (!monacoModule) {
+    throw new Error('Monaco runtime is not initialized');
+  }
+  return monacoModule;
 }
 
 /**
@@ -93,6 +109,7 @@ export async function ensureTextMateLanguage(props: EditorProps, targetLangId: s
   const { languages = [], grammars = [] } = props;
   if (!targetLangId) return;
   if (languages.length === 0 && grammars.length === 0) return;
+  const monaco = await ensureMonacoModule();
 
   for (const lang of languages) {
     const safeAliases = lang.aliases?.filter((a): a is string => typeof a === 'string' && a.length > 0);
@@ -106,6 +123,8 @@ export async function ensureTextMateLanguage(props: EditorProps, targetLangId: s
 
   if (grammars.length === 0) return;
   await ensureOnigurumaWasmLoaded();
+  const textmate = await (textMateModulePromise ??= import('vscode-textmate'));
+  const oniguruma = await (onigurumaModulePromise ??= import('vscode-oniguruma'));
 
   // Map `languageId -> scopeName` (case-insensitive match).
   const languageToScope = new Map<string, string>();
@@ -125,10 +144,10 @@ export async function ensureTextMateLanguage(props: EditorProps, targetLangId: s
   const activatedKey = `${targetLanguageId}\0${targetScopeName}`;
   if (activatedTokenProviders.has(activatedKey)) return;
 
-  const tmRegistry = new TMRegistry({
+  const tmRegistry = new textmate.Registry({
     onigLib: Promise.resolve({
-      createOnigScanner: (patterns: string[]) => createOnigScanner(patterns),
-      createOnigString: (s: string) => createOnigString(s),
+      createOnigScanner: (patterns: string[]) => oniguruma.createOnigScanner(patterns),
+      createOnigString: (s: string) => oniguruma.createOnigString(s),
     }),
     loadGrammar: async (scopeName: string) => {
       const cached = grammarJsonCache.get(scopeName);
@@ -156,11 +175,11 @@ export async function ensureTextMateLanguage(props: EditorProps, targetLangId: s
   const grammar = await tmRegistry.loadGrammar(targetScopeName).catch(() => null);
   if (!grammar) return;
   monaco.languages.setTokensProvider(targetLangId, {
-    getInitialState: () => new TMState(INITIAL),
-    tokenize: (line: string, state: monaco.languages.IState) => {
+    getInitialState: () => new TMState(textmate.INITIAL),
+    tokenize: (line: string, state: Monaco.languages.IState) => {
       const tmState = state as TMState;
       const result = grammar!.tokenizeLine(line, tmState.ruleStack);
-      const tokens: monaco.languages.IToken[] = result.tokens.map((t) => ({
+      const tokens: Monaco.languages.IToken[] = result.tokens.map((t) => ({
         startIndex: t.startIndex,
         scopes: stripLangSuffix(t.scopes[t.scopes.length - 1] ?? 'source'),
       }));
@@ -174,20 +193,22 @@ export async function ensureTextMateLanguage(props: EditorProps, targetLangId: s
   activatedTokenProviders.add(activatedKey);
 }
 
-function ensureMonacoReady(): void {
-  if (monacoReady) return;
-  // Inject Monaco styles so line numbers, gutter, scrollbars and tokens render correctly.
-  if (typeof document !== 'undefined' && document.head && monacoCss) {
-    const style = document.createElement('style');
-    style.setAttribute('data-monaco', 'true');
-    style.textContent = typeof monacoCss === 'string' ? monacoCss : '';
-    document.head.appendChild(style);
+async function ensureMonacoReady(): Promise<void> {
+  if (monacoCssReady === false && typeof document !== 'undefined' && document.head && monacoCssUrl) {
+    const link = document.createElement('link');
+    link.setAttribute('data-monaco', 'true');
+    link.rel = 'stylesheet';
+    link.href = monacoCssUrl;
+    document.head.appendChild(link);
+    monacoCssReady = true;
   }
+  if (monacoReady) return;
+  const monaco = await ensureMonacoModule();
   const g = typeof globalThis !== 'undefined' ? globalThis : (typeof window !== 'undefined' ? window : self);
   (g as unknown as { MonacoEnvironment?: { getWorker: () => Worker } }).MonacoEnvironment = {
     getWorker: () => new (EditorWorker as new () => Worker)(),
   };
-  const commonRules: monaco.editor.ITokenThemeRule[] = [
+  const commonRules: Monaco.editor.ITokenThemeRule[] = [
     { token: 'comment', foreground: '6A9955', fontStyle: 'italic' },
     { token: 'string', foreground: 'CE9178' },
     { token: 'keyword', foreground: '569CD6' },
@@ -262,9 +283,9 @@ function normalizeTokenColor(value: string): string | null {
 /** Convert VS Code tokenColors to Monaco ITokenThemeRule[], and return editor colors. */
 function buildMonacoTheme(
   themeData: ColorThemeData,
-): { base: 'vs' | 'vs-dark'; rules: monaco.editor.ITokenThemeRule[]; colors: Record<string, string> } {
+): { base: 'vs' | 'vs-dark'; rules: Monaco.editor.ITokenThemeRule[]; colors: Record<string, string> } {
   const base: 'vs' | 'vs-dark' = themeData.kind === 'light' ? 'vs' : 'vs-dark';
-  const rules: monaco.editor.ITokenThemeRule[] = [];
+  const rules: Monaco.editor.ITokenThemeRule[] = [];
   const colors: Record<string, string> = {};
 
   if (themeData.colors) {
@@ -298,7 +319,7 @@ function buildMonacoTheme(
       }
       if (scopes.length === 0) scopes.push('');
       for (const scope of scopes) {
-        const rule: monaco.editor.ITokenThemeRule = { token: scope };
+        const rule: Monaco.editor.ITokenThemeRule = { token: scope };
         if (tc.settings.foreground) {
           const fg = normalizeTokenColor(tc.settings.foreground);
           if (fg) rule.foreground = fg;
@@ -320,6 +341,7 @@ let themeUnsubscribe: (() => void) | null = null;
 let cssVarThemeObserver: MutationObserver | null = null;
 
 function applyColorThemeToEditor(themeData: ColorThemeData): void {
+  const monaco = getMonacoModule();
   const { base, rules, colors } = buildMonacoTheme(themeData);
   monaco.editor.defineTheme('dotdir-custom', { base, inherit: true, rules, colors });
   monaco.editor.setTheme('dotdir-custom');
@@ -329,6 +351,7 @@ function applyColorThemeToEditor(themeData: ColorThemeData): void {
 }
 
 function applyCssVarThemeToEditor(isDark: boolean): void {
+  const monaco = getMonacoModule();
   const cs = getComputedStyle(document.documentElement);
   const bg = normalizeColor(cs.getPropertyValue('--bg')) ?? (isDark ? '#1e1e1e' : '#ffffff');
   const fg = normalizeColor(cs.getPropertyValue('--fg')) ?? (isDark ? '#d4d4d4' : '#1e1e1e');
@@ -345,8 +368,9 @@ function applyCssVarThemeToEditor(isDark: boolean): void {
 }
 
 export async function createEditorMount(root: HTMLElement, props: EditorProps): Promise<() => void> {
-  ensureMonacoReady();
+  await ensureMonacoReady();
   await ensureTextMateLanguage(props, props.langId);
+  const monaco = getMonacoModule();
 
   // Determine initial theme
   const colorTheme = dotdir.getColorTheme?.() ?? null;
@@ -502,6 +526,7 @@ export async function createEditorMount(root: HTMLElement, props: EditorProps): 
 
 export function setEditorLanguage(langId: string): void {
   if (editorInstance) {
+    const monaco = getMonacoModule();
     const model = editorInstance.getModel();
     if (model) {
       monaco.editor.setModelLanguage(model, langId);

@@ -20,7 +20,7 @@
         "patterns": [
           "*.*"
         ],
-        "entry": "dist/editor.cjs",
+        "entry": "dist/editor.mjs",
         "priority": 0
       }
     ],

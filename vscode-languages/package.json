@@ -2,7 +2,7 @@
   "name": "vscode-languages",
   "displayName": "VS Code Built-in Languages",
   "description": "TextMate grammars from VS Code for syntax highlighting",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "publisher": "dotdir",
   "license": "MIT",
   "files": [

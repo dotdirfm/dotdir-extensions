@@ -1,6 +1,6 @@
 {
   "name": "csv-viewer",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "publisher": "dotdir",
   "displayName": "CSV Viewer",
   "description": "View CSV files for .dir",

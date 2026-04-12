@@ -596,7 +596,7 @@ export async function mountViewer(
   root.appendChild(frame);
 
   contentDiv = document.createElement("div");
-  contentDiv.style.cssText = `position:absolute;left:8px;top:4px;right:${8 + SCROLLBAR_WIDTH + SCROLLBAR_PADDING}px;bottom:4px;overflow:hidden;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;color:var(--fg);`;
+  contentDiv.style.cssText = `position:absolute;left:8px;top:4px;right:${8 + SCROLLBAR_WIDTH + SCROLLBAR_PADDING}px;bottom:4px;overflow:hidden;font:12px/1 ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;color:var(--fg);`;
   frame.appendChild(contentDiv);
 
   scrollbarTrack = document.createElement("div");

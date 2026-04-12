@@ -3,6 +3,7 @@ name: Publish extensions to dotdir.dev
 # Manual release: bump extension versions in package.json files, merge to main,
 # then run this workflow. Configure repo secret DOTDIR_PUBLISH_TOKEN (publisher
 # access token from https://dotdir.dev/extensions/dashboard/<publisher>/tokens).
+# Uploads that hit an existing semver (HTTP 409) are skipped; the job still succeeds.
 
 on:
   workflow_dispatch:

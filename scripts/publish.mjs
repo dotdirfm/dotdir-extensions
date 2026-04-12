@@ -6,6 +6,10 @@
  *   # or: pnpm build && pnpm zip && DOTDIR_PUBLISH_TOKEN=… pnpm publish:dotdir
  *
  * Optional: DOTDIR_PUBLISH_URL (default https://dotdir.dev/api/extensions/publish)
+ *
+ * HTTP 409 (version already on marketplace) is treated as success so CI can
+ * publish a matrix of extensions without failing the whole job when only some
+ * package.json versions were bumped.
  */
 
 import fs from "fs";
@@ -72,18 +76,29 @@ async function publishOne(pkgDir) {
   }
 
   if (!res.ok) {
+    // API returns 409 when extension_versions already has this semver
+    // (see dotdir-website publish route).
+    if (res.status === 409) {
+      console.log(`skip ${zipName} (${detail})`);
+      return "skip";
+    }
     throw new Error(`${zipName}: ${res.status} ${detail}`);
   }
 
-  console.log(`ok  ${zipName}`);
+  console.log(`ok   ${zipName}`);
+  return "ok";
 }
 
 async function main() {
   console.log(`Publishing to ${publishUrl}\n`);
+  let ok = 0,
+    skip = 0;
   for (const pkgDir of PACKAGES) {
-    await publishOne(pkgDir);
+    const r = await publishOne(pkgDir);
+    if (r === "skip") skip++;
+    else ok++;
   }
-  console.log("\nAll packages published.");
+  console.log(`\nDone: ${ok} published, ${skip} skipped (version already exists).`);
 }
 
 main().catch((err) => {

@@ -14,7 +14,7 @@ pnpm build                            # Build all extensions
 pnpm --filter monaco-editor run build # Build a single extension
 pnpm dev                              # Watch mode for all extensions
 pnpm zip                              # Create zip archives in packed/ (not `pnpm pack` — that is pnpm’s tarball)
-pnpm publish:dotdir                   # Upload packed/*.zip (needs DOTDIR_PUBLISH_TOKEN)
+pnpm publish:dotdir                   # Upload packed/*.zip (needs DOTDIR_PUBLISH_TOKEN); 409 = already published, skipped
 pnpm release:dotdir                   # build + zip + publish:dotdir
 ```
 

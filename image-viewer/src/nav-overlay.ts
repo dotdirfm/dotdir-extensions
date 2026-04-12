@@ -1,4 +1,5 @@
 import type {} from "@dotdirfm/extension-api";
+import { tryHost } from "./host";
 
 const CHEVRON_LEFT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><polyline points="15 18 9 12 15 6"/></svg>';
 const CHEVRON_RIGHT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" width="22" height="22"><polyline points="9 6 15 12 9 18"/></svg>';
@@ -18,7 +19,9 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, css: string, html?: s
 }
 
 export function createNavOverlay(container: HTMLElement): NavOverlayHandle | null {
-  const exec = dotdir.executeCommand.bind(dotdir);
+  const host = tryHost();
+  if (!host || typeof host.executeCommand !== "function") return null;
+  const exec = host.executeCommand.bind(host);
 
   // Top-right counter badge: "3 / 42"
   const counter = el('div',

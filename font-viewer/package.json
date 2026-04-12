@@ -1,6 +1,6 @@
 {
   "name": "font-viewer",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "publisher": "dotdir",
   "displayName": "Font Viewer",
   "description": "Preview font files for .dir",

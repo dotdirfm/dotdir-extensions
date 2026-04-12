@@ -4,6 +4,7 @@ import {
   type NavOverlayHandle,
 } from "./nav-overlay";
 import type { ViewerProps } from "@dotdirfm/extension-api";
+import { getHost } from "./host";
 import { attachControls, type ControlsHandle } from "./video-controls";
 import { isStreamable, streamVideo } from "./video-stream";
 
@@ -88,6 +89,8 @@ export async function mountViewer(
 ): Promise<void> {
   cleanup();
 
+  const host = getHost();
+
   const ext = getExt(props.fileName);
   const mime = MIME[ext] || "application/octet-stream";
   const isVideo = /^(mp4|webm|ogv|ogg|mov|m4v)$/.test(ext);
@@ -126,7 +129,7 @@ export async function mountViewer(
         streamDestroy();
         streamDestroy = null;
       }
-      const buf = await dotdir.readFile(props.filePath);
+      const buf = await host.readFile(props.filePath);
       const blob = new Blob([buf], { type: mime });
       if (objectUrl) URL.revokeObjectURL(objectUrl);
       objectUrl = URL.createObjectURL(blob);
@@ -153,7 +156,7 @@ export async function mountViewer(
         streamDestroy = streamVideo(
           video,
           (offset, length) =>
-            dotdir.readFileRange(props.filePath, offset, length),
+            host.readFileRange(props.filePath, offset, length),
           props.fileSize,
         );
       } catch {
@@ -167,7 +170,7 @@ export async function mountViewer(
     wrap.style.cssText =
       "flex:1;min-height:0;min-width:0;width:100%;display:flex;align-items:center;justify-content:center;overflow:auto;background:#1a1a1a;position:relative;";
 
-    const buf = await dotdir.readFile(props.filePath);
+    const buf = await host.readFile(props.filePath);
     const blob = new Blob([buf], { type: mime });
     objectUrl = URL.createObjectURL(blob);
 
@@ -184,7 +187,7 @@ export async function mountViewer(
   navHandle = createNavOverlay(wrap);
 
   // Arrow key navigation via .dir command system (no document-level key listeners).
-  const commands = dotdir.commands;
+  const commands = host.commands;
   if (!commands) throw new Error("Host commands API is unavailable");
   const prevCommandId = "imageViewer.navigatePrev";
   const nextCommandId = "imageViewer.navigateNext";
@@ -192,7 +195,7 @@ export async function mountViewer(
   disposeNavPrevCommand = commands.registerCommand(
     prevCommandId,
     async () => {
-      await dotdir.executeCommand("navigatePrev", {
+      await host.executeCommand("navigatePrev", {
         patterns: MEDIA_PATTERNS,
       });
     },
@@ -200,14 +203,14 @@ export async function mountViewer(
   disposeNavNextCommand = commands.registerCommand(
     nextCommandId,
     async () => {
-      await dotdir.executeCommand("navigateNext", {
+      await host.executeCommand("navigateNext", {
         patterns: MEDIA_PATTERNS,
       });
     },
   );
 
   // Re-subscribe to external file changes for this image/video.
-  disposeFileChange = dotdir.onFileChange(async () => {
+  disposeFileChange = host.onFileChange(async () => {
     try {
       await mountViewer(root, props);
     } catch {
@@ -216,7 +219,7 @@ export async function mountViewer(
   });
 
   keydownHandler = (e: KeyboardEvent) => {
-    if (e.key === "Escape") dotdir.onClose();
+    if (e.key === "Escape") host.onClose();
     if (e.key === " " && isVideo) {
       e.preventDefault();
       const v = wrap.querySelector("video");

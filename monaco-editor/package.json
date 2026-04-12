@@ -1,6 +1,6 @@
 {
   "name": "monaco-editor",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "publisher": "dotdir",
   "displayName": "Monaco Editor",
   "description": "Monaco-based code editor for .dir with syntax highlighting",

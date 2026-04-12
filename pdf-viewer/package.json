@@ -1,6 +1,6 @@
 {
   "name": "pdf-viewer",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "publisher": "dotdir",
   "displayName": "PDF Viewer",
   "description": "View PDF files for .dir",

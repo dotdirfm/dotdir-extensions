@@ -1,6 +1,6 @@
 {
   "name": "shell-integration",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "publisher": "dotdir",
   "displayName": ".dir shell integration",
   "description": "OSC 7 cwd sync and .dir OSC 779 (command finished) for integrated terminals.",

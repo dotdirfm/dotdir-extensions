@@ -1,6 +1,6 @@
 {
   "name": "zip-provider",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "publisher": "dotdir",
   "displayName": "ZIP Provider",
   "description": "Browse ZIP archive contents for .dir",

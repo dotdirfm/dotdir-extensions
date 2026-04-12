@@ -3,6 +3,8 @@ import type { ViewerProps } from "@dotdirfm/extension-api";
 const SCROLLBAR_WIDTH = 10;
 const SCROLLBAR_PADDING = 6;
 const TAB_SIZE = 8;
+/** Vertical rhythm for text/hex rows (scroll math uses `rowH` = char cell × this). */
+const LINE_HEIGHT_RATIO = 1.5;
 const BLOCK_SIZE = 64 * 1024;
 const BACKWARD_SEARCH_MAX = 100_000; // MC uses 100,000
 
@@ -42,6 +44,7 @@ let lastSearchDir: "forward" | "backward" = "forward";
 
 let charW = 8,
   charH = 16,
+  rowH = 24,
   rows = 20,
   cols = 80;
 
@@ -427,7 +430,7 @@ async function findLineOffset(lineNum: number): Promise<number> {
 // ── Rendering helpers ──────────────────────────────────────────────────────────
 function renderSegs(segs: Seg[], parent: HTMLElement) {
   const div = document.createElement("div");
-  div.style.cssText = `white-space:pre;line-height:${charH}px;height:${charH}px;`;
+  div.style.cssText = `white-space:pre;line-height:${LINE_HEIGHT_RATIO};height:${rowH}px;`;
   if (segs.length === 1 && !segs[0]!.style) {
     div.textContent = segs[0]!.text;
   } else {
@@ -553,7 +556,7 @@ export async function mountViewer(
   hexBtn.style.cssText =
     "border:1px solid var(--border);background:var(--bg);color:var(--fg);border-radius:4px;padding:2px 8px;font-size:11px;cursor:pointer;";
   hexBtn.textContent = "Hex";
-  hexBtn.title = "Toggle hex mode (F4)";
+  hexBtn.title = "Toggle hex mode";
   hdr.appendChild(hexBtn);
 
   const wl = document.createElement("label");
@@ -657,8 +660,9 @@ export async function mountViewer(
     contentDiv.removeChild(probe);
     charW = Math.max(6, r.width || 8);
     charH = Math.max(10, r.height || 16);
+    rowH = Math.max(15, Math.round(charH * LINE_HEIGHT_RATIO));
     cols = Math.max(10, Math.floor(contentDiv.clientWidth / charW));
-    rows = Math.max(1, Math.floor(contentDiv.clientHeight / charH));
+    rows = Math.max(1, Math.floor(contentDiv.clientHeight / rowH));
     if (hexMode) bytesPerLine = calcBPL(cols);
   };
 
@@ -1052,7 +1056,7 @@ export async function mountViewer(
   // Wheel
   wheelHandler = (e: WheelEvent) => {
     e.preventDefault();
-    const lines = Math.round(e.deltaY / charH);
+    const lines = Math.round(e.deltaY / rowH);
     if (lines > 0) void scrollDown(Math.max(1, lines));
     else if (lines < 0) void scrollUp(Math.max(1, -lines));
   };
@@ -1070,7 +1074,7 @@ export async function mountViewer(
     const now = performance.now(),
       dy = e.clientY - lastTouchY,
       dt = now - lastTouchTime || 1;
-    const lines = dy / charH;
+    const lines = dy / rowH;
     if (lines > 0) void scrollUp(Math.max(1, Math.round(lines)));
     else if (lines < 0) void scrollDown(Math.max(1, Math.round(-lines)));
     touchVelocity = dy / dt;
@@ -1088,7 +1092,7 @@ export async function mountViewer(
         return;
       }
       const px = touchVelocity * 16,
-        lines = px / charH;
+        lines = px / rowH;
       if (lines > 0) await scrollDown(Math.max(1, Math.round(lines)));
       else if (lines < 0) await scrollUp(Math.max(1, Math.round(-lines)));
       touchVelocity *= 0.95;

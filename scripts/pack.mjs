@@ -13,6 +13,7 @@ import { fileURLToPath } from 'url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, '..');
 
+// Keep in sync with scripts/publish.mjs (marketplace upload list).
 const PACKAGES = [
   'monaco-editor', 'image-viewer', 'file-viewer', 'csv-viewer', 'pdf-viewer', 'font-viewer',
   'sqlite-editor', 'zip-provider', 'iso-provider', 'shell-integration', 'dsstore-viewer', 'vscode-languages'];

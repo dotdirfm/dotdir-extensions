@@ -1,0 +1,51 @@
+name: Publish extensions to dotdir.dev
+
+# Manual release: bump extension versions in package.json files, merge to main,
+# then run this workflow. Configure repo secret DOTDIR_PUBLISH_TOKEN (publisher
+# access token from https://dotdir.dev/extensions/dashboard/<publisher>/tokens).
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: dotdir-extensions-marketplace
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    env:
+      DOTDIR_PUBLISH_TOKEN: ${{ secrets.DOTDIR_PUBLISH_TOKEN }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: pnpm/action-setup@v5
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Check publish token
+        run: |
+          if [ -z "$DOTDIR_PUBLISH_TOKEN" ]; then
+            echo "::error::Repository secret DOTDIR_PUBLISH_TOKEN is not set. Add it under Settings → Secrets and variables → Actions."
+            exit 1
+          fi
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Build and zip
+        run: pnpm build && pnpm zip
+
+      - name: Publish to marketplace
+        run: pnpm publish:dotdir

@@ -13,8 +13,14 @@ pnpm install                          # Install dependencies
 pnpm build                            # Build all extensions
 pnpm --filter monaco-editor run build # Build a single extension
 pnpm dev                              # Watch mode for all extensions
-pnpm pack                             # Create zip archives in packed/
+pnpm zip                              # Create zip archives in packed/ (not `pnpm pack` — that is pnpm’s tarball)
+pnpm publish:dotdir                   # Upload packed/*.zip (needs DOTDIR_PUBLISH_TOKEN)
+pnpm release:dotdir                   # build + zip + publish:dotdir
 ```
+
+## GitHub Actions
+
+Workflow [`.github/workflows/publish-dotdir-marketplace.yml`](.github/workflows/publish-dotdir-marketplace.yml) runs **manually** (`Actions` → *Publish extensions to dotdir.dev* → *Run workflow*). Add repository secret **`DOTDIR_PUBLISH_TOKEN`** (publisher access token from the dotdir.dev extensions dashboard). Bump `version` in each extension’s `package.json` before publishing so the marketplace accepts the upload.
 
 There are no tests or linting configured.
 

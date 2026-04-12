@@ -1,4 +1,5 @@
-import type { ViewerProps } from "@dotdirfm/extension-api";
+import type { DotDirGlobalApi, ViewerProps } from "@dotdirfm/extension-api";
+import { getHost } from "./host";
 
 const SCROLLBAR_WIDTH = 10;
 const SCROLLBAR_PADDING = 6;
@@ -79,6 +80,8 @@ let cacheOff = -1;
 let cacheBuf: Uint8Array | null = null;
 let cacheLen = 0;
 let disposeFileChange: (() => void) | null = null;
+/** Set for the lifetime of a mount; used by `readRange` and other helpers outside `mountViewer` closures. */
+let hostRef: DotDirGlobalApi | null = null;
 
 // ── Utilities ──────────────────────────────────────────────────────────────────
 function fmtBytes(b: number): string {
@@ -106,7 +109,8 @@ function disposeCommands() {
 
 // ── Data source ────────────────────────────────────────────────────────────────
 async function readRange(off: number, len: number): Promise<Uint8Array> {
-  return new Uint8Array(await dotdir.readFileRange(_path, off, len));
+  const h = hostRef ?? getHost();
+  return new Uint8Array(await h.readFileRange(_path, off, len));
 }
 
 async function loadBlock(idx: number) {
@@ -477,10 +481,11 @@ export async function mountViewer(
   root: HTMLElement,
   props: ViewerProps,
 ): Promise<void> {
+  hostRef = getHost();
   _path = props.filePath;
   fileSize = props.fileSize;
   try {
-    const stat = await dotdir.statFile(_path);
+    const stat = await hostRef.statFile(_path);
     fileSize = stat.size;
   } catch {
     // fall back to props.fileSize
@@ -518,11 +523,11 @@ export async function mountViewer(
     disposeFileChange();
     disposeFileChange = null;
   }
-  disposeFileChange = dotdir.onFileChange(async () => {
+  disposeFileChange = hostRef.onFileChange(async () => {
     // Reset cache and redisplay when file changes on disk
-    if (dotdir.statFile) {
+    if (hostRef?.statFile) {
       try {
-        const stat = await dotdir.statFile(_path);
+        const stat = await hostRef.statFile(_path);
         fileSize = stat.size;
       } catch {
         // ignore stat errors, keep old size
@@ -913,7 +918,7 @@ export async function mountViewer(
   };
 
   const closeViewer = () => {
-    dotdir.onClose();
+    hostRef?.onClose();
   };
 
   const scrollLineDown = async () => {
@@ -1032,7 +1037,7 @@ export async function mountViewer(
       searchCaseSensitive = inputBarCase!.checked;
     });
 
-  const commands = dotdir.commands;
+  const commands = hostRef.commands;
   if (!commands) throw new Error("Host commands API is unavailable");
   disposeCommands();
   commandDisposers = [
@@ -1171,6 +1176,11 @@ export async function mountViewer(
 // ── Unmount ────────────────────────────────────────────────────────────────────
 export function unmountViewer(): void {
   stopInertia();
+  if (disposeFileChange) {
+    disposeFileChange();
+    disposeFileChange = null;
+  }
+  hostRef = null;
   disposeCommands();
   if (inputKeydownHandler && inputBarInput) {
     inputBarInput.removeEventListener("keydown", inputKeydownHandler);

@@ -1,6 +1,6 @@
 {
   "name": "file-viewer",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "publisher": "dotdir",
   "displayName": "File Viewer",
   "description": "View file contents (text/binary) for .dir",
